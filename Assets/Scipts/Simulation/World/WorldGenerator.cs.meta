@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: 8dfe6c397e777c34db8eb6b24da50dce
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - GrassObj: {fileID: 8641698650306229065, guid: d3ffa70a6cc416342a06188557d415d1, type: 3}
+  - WaterObj: {fileID: 4796176375304811582, guid: cfe3cdb756e84dd45bcb962de651f3d6, type: 3}
+  - SandObj: {fileID: 4455045393165788882, guid: e8f9b591248240d4aa61e332f67cee33, type: 3}
+  - TreeObj: {fileID: 1085241175354006, guid: 432294df81e8e13479940968029f1c72, type: 3}
+  - PlantObj: {fileID: 1157028143247034, guid: 5093148dca5cbc14e8ab8af73e0916ac, type: 3}
+  - RockObj: {fileID: 1290125285081394, guid: 2f63cac684bc3a54486992c06658102e, type: 3}
+  executionOrder: -50
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
