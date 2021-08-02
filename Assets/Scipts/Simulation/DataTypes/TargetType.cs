@@ -3,12 +3,12 @@
 /// </summary>
 public enum TargetType : byte
 {
-    Explore,
-    Water,
-    Plant,
-    Chicken,
-    Bunny,
-    Fox,
+    Explore = 255,
+    Water = 254,
+    Plant = 0,
+    Chicken = 1,
+    Bunny = 2,
+    Fox = 3,
 
     Mate,
     Food,

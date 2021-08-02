@@ -56,6 +56,7 @@ public abstract class Animal : LivingBeings
     private Coord basePosition;
     protected TargetType currentTarget;
     private Stack<Coord> path;
+    private LivingBeings targetBeing;
 
     //**********************************************************************************
     //Abstract methods
@@ -90,7 +91,8 @@ public abstract class Animal : LivingBeings
         else
         {
             currentTarget = DecideTargetPriority();
-            target = world.CreateNewTarget(currentTarget, this);
+            targetBeing = null;
+            target = world.CreateNewTarget(currentTarget, this, ref targetBeing);
             path = world.CreatePath(new Coord(XPos, ZPos), target);
             PopNextPathNode();
             time = 0;
@@ -100,15 +102,7 @@ public abstract class Animal : LivingBeings
         if (time >= timeToMove)
         {
             time = 0;
-            //this.transform.position = new Vector3(Mathf.Round(XPos), this.YPos, Mathf.Round(ZPos));
-            //if (Coord.CalcDistance(target.x, target.y, XPos, ZPos) <= world.TileSize)
-            //{
-            //    moveTarget = target;
-            //}
-            //else
-            //{
             PopNextPathNode();
-            //}
         }
 
         Hunger -= Time.deltaTime;
@@ -116,7 +110,8 @@ public abstract class Animal : LivingBeings
         //if the hunger or thirst reached 0 kill it
         if (Hunger <= 0 || Thirst <= 0)
         {
-            // world.Kill(this);
+            Debug.Log("Dead :(");
+            world.Kill(this);
         }
 
         Debug.Log(currentTarget.ToString());
@@ -125,7 +120,14 @@ public abstract class Animal : LivingBeings
     private void PopNextPathNode()
     {
         if (path.Count > 0)
+        {
+            if (targetBeing != null && targetBeing.GotEaten)
+            {
+                target = null;
+                return;
+            }
             moveTarget = path.Pop();
+        }
         else
         {
             ReachedTarget();
@@ -147,7 +149,7 @@ public abstract class Animal : LivingBeings
         {
             return TargetType.Mate;
         }
-        else if (Hunger < Thirst)
+        else if (Hunger <= Thirst)
         {
             return TargetType.Food;
         }
@@ -179,7 +181,8 @@ public abstract class Animal : LivingBeings
     /// </summary>
     protected void Eat()
     {
-        this.Hunger = maxHunger;
+        if (targetBeing != null && targetBeing.GetEaten())
+            this.Hunger = maxHunger;
     }
 
     //-------------------------------------------------------------------------------

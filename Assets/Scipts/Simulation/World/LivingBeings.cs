@@ -40,10 +40,31 @@ public abstract class LivingBeings : MonoBehaviour
     /// </summary>
     public Species Specie { get; protected set; }
 
+    /// <summary>
+    /// Bool to store if it has been already eaten
+    /// </summary>
+    public bool GotEaten { get; protected set; }
+
     //-------------------------------------------------------
     //Runs when the script is loaded
     private void Start()
     {
         this.world = this.GetComponentInParent<World>();
+    }
+
+    //----------------------------------------------------------------------------------
+    /// <summary>
+    /// Eat the plant
+    /// </summary>
+    /// <returns>true if it was eaten successfully false if it is fails miserably</returns>
+    public virtual bool GetEaten()
+    {
+        if (GotEaten)
+        {
+            return false;
+        }
+        world.RemoveFromLivingLayer(XCoordOnGrid, YCoordOnGrid, this);
+        this.GotEaten = true;
+        return true;
     }
 }

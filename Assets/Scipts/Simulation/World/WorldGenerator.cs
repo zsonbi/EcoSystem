@@ -34,13 +34,18 @@ public class WorldGenerator : MonoBehaviour
     [HideInInspector]
     public List<byte[,]> layers = new List<byte[,]>(); //The layers used for navigation and other stuff
 
-    private byte[,] waterLayer { get => layers[0]; } //1 for water tiles
-    private byte[,] moveLayer { get => layers[1]; } //1 for passable tiles
-    private byte[,] grassLayer { get => layers[2]; } //1 for grass tiles used for the prop generation
-    private byte[,] plantLayer { get => layers[3]; } //1 where the plants are
+    public TileType[,] tileLayer;
+    public List<LivingBeings>[,] livingLayer;
+
+    //private byte[,] waterLayer { get => layers[0]; } //1 for water tiles
+    private byte[,] moveLayer { get => layers[0]; } //1 for passable tiles
+
+    //private byte[,] grassLayer { get => layers[2]; } //1 for grass tiles used for the prop generation
+    //private byte[,] plantLayer { get => layers[3]; } //1 where the plants are
 
     private byte numberOfDifferentObjects;
     private List<List<GameObject>> objectsToCombine;
+    private GameObject plantParent;
 
     /// <summary>
     /// Adds the layers to the layers list
@@ -60,6 +65,18 @@ public class WorldGenerator : MonoBehaviour
         //Cap the fps to 60
         Application.targetFrameRate = 60;
         QualitySettings.vSyncCount = 0;
+
+        this.tileLayer = new TileType[xSize, zSize];
+        this.livingLayer = new List<LivingBeings>[xSize, zSize];
+        plantParent = new GameObject("plantParent");
+        this.plantParent.transform.parent = this.transform;
+        for (int x = 0; x < xSize; x++)
+        {
+            for (int z = 0; z < zSize; z++)
+            {
+                livingLayer[x, z] = new List<LivingBeings>();
+            }
+        }
 
         AddLayers(6);
         //Randomizes the offset
@@ -105,14 +122,15 @@ public class WorldGenerator : MonoBehaviour
             for (int z = 0; z < zSize; z++)
             {
                 GameObject clone;
-                switch (DetermineTileType(x, z))
+                TileType tileType = DetermineTileType(x, z);
+                switch (tileType)
                 {
                     //When it is a water tile
                     case TileType.Water:
                         clone = Instantiate(Tiles[(byte)TileType.Water], this.transform);
                         clone.transform.position = new Vector3(x, 0f, z) * TileScale;
                         objectsToCombine[(byte)TileType.Water].Add(clone);
-                        waterLayer[x, z] = 1;
+                        moveLayer[x, z] = 0;
                         break;
                     //When it is a grass tile
                     case TileType.Grass:
@@ -120,7 +138,7 @@ public class WorldGenerator : MonoBehaviour
                         clone.transform.position = new Vector3(x, 0.2f, z) * TileScale;
                         objectsToCombine[(byte)TileType.Grass].Add(clone);
                         moveLayer[x, z] = 1;
-                        grassLayer[x, z] = 1;
+
                         break;
                     //When it is a sand tile
                     case TileType.Sand:
@@ -133,6 +151,7 @@ public class WorldGenerator : MonoBehaviour
                     default:
                         break;
                 }
+                tileLayer[x, z] = tileType;
             }
         }
     }
@@ -158,9 +177,10 @@ public class WorldGenerator : MonoBehaviour
                     //When the prop is a plant
                     case EnviromentType.Plant:
                         clone = Instantiate(Props[(byte)EnviromentType.Plant], this.transform);
-                        objectsToCombine[(byte)EnviromentType.Plant + 3].Add(clone);
-                        plantLayer[x, z] = 1;
+                        //  objectsToCombine[(byte)EnviromentType.Plant + 3].Add(clone);
+                        livingLayer[x, z].Add(clone.GetComponent<LivingBeings>());
                         clone.transform.position = new Vector3(x, 0.7f, z) * TileScale;
+                        clone.transform.parent = plantParent.transform;
                         break;
                     //When the prop is a rock and you don't even need to be afraid of the malphite ult
                     case EnviromentType.Rock:
@@ -223,15 +243,15 @@ public class WorldGenerator : MonoBehaviour
     private EnviromentType DetermineEnviromentType(int x, int z)
     {
         float noise = Mathf.PerlinNoise((float)(x * 0.9f) + XOffset, (float)(z * 0.9f) + ZOffset);
-        if (noise > 0.9f && moveLayer[x, z] == 1)
+        if (noise > 0.9f && tileLayer[x, z] != TileType.Water)
         {
             return EnviromentType.Rock;
         }
-        else if (noise > 0.75f && grassLayer[x, z] == 1)
+        else if (noise > 0.75f && tileLayer[x, z] == TileType.Grass)
         {
             return EnviromentType.Tree;
         }
-        else if (noise > 0.65f && grassLayer[x, z] == 1)
+        else if (noise > 0.65f && tileLayer[x, z] == TileType.Grass)
         {
             return EnviromentType.Plant;
         }
@@ -251,11 +271,11 @@ public class WorldGenerator : MonoBehaviour
     private TileType DetermineTileType(int x, int z)
     {
         float noise = Mathf.PerlinNoise((float)(x / (float)xSize * 5f) + XOffset, (float)(z / (float)zSize * 5f) + ZOffset) * 10f - 3.5f;
-        if (noise > 0.35f)
+        if (noise > 0.45f)
         {
             return TileType.Grass;
         }
-        else if (noise > 0.15f)
+        else if (noise > 0f)
         {
             return TileType.Sand;
         }

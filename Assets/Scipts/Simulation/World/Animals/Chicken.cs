@@ -15,8 +15,8 @@ public class Chicken : Animal
         //Set the chickens stats
         base.FoodType.Add(Species.Plant);
         base.Specie = Species.Chicken;
-        base.Hunger = 30f;
-        base.Thirst = 30f;
+        base.Hunger = maxHunger;
+        base.Thirst = maxThirst;
         base.Gender = (Random.Range(0, 1) == 1 ? Gender.Male : Gender.Female);
         base.Speed = Random.Range(0.2f, maxSpeed);
         base.VisionRange = Random.Range(4f, maxVisionRange);
@@ -81,5 +81,16 @@ public class Chicken : Animal
     {
         //TODO simple but unbreakable
         throw new System.NotImplementedException();
+    }
+
+    //------------------------------------------------------------
+    /// <summary>
+    /// Eat the chicken
+    /// </summary>
+    /// <returns>true if success false if it failed</returns>
+    public override bool GetEaten()
+    {
+        world.Kill(this);
+        return base.GetEaten();
     }
 }

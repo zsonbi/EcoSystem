@@ -6,12 +6,12 @@ using UnityEngine;
 public class EdibleBush : LivingBeings
 {
     private static float defaultTimeToRegrow = 10f; //The number of seconds it takes for the bus to regrow
+    private static Vector3 defaultScale = new Vector3(0.5f, 0.5f, 0.5f);
     private float timeTillRegrow = 0f; //The current progress of the regrowth
-    private bool GotEaten; //Bool to store if it has been already eaten
 
     //------------------------------------------------------------
     //Runs before the first Update
-    private void Start()
+    private void Awake()
     {
         this.Specie = Species.Plant;
     }
@@ -23,8 +23,9 @@ public class EdibleBush : LivingBeings
         if (!GotEaten)
             return;
         timeTillRegrow += Time.deltaTime;
-        if (timeTillRegrow <= defaultTimeToRegrow)
+        if (timeTillRegrow >= defaultTimeToRegrow)
             Regrow();
+        this.transform.localScale = defaultScale * (timeTillRegrow / defaultTimeToRegrow);
     }
 
     //----------------------------------------------------------------------------------
@@ -32,22 +33,23 @@ public class EdibleBush : LivingBeings
     /// Eat the plant
     /// </summary>
     /// <returns>true if it was eaten successfully false if it is fails miserably</returns>
-    public bool GetEaten()
+    public override bool GetEaten()
     {
-        if (GotEaten)
+        if (base.GetEaten())
         {
-            return false;
+            this.timeTillRegrow = 0f;
+            this.transform.localScale = new Vector3(0f, 0f, 0f);
+            return true;
         }
-
-        this.GotEaten = true;
-        timeTillRegrow = 0f;
-        return true;
+        return false;
     }
 
     //----------------------------------------------------------------------------------
     //Regrow the plant
     private void Regrow()
     {
+        this.transform.localScale = defaultScale;
         this.GotEaten = false;
+        this.world.AddToLivingLayer(XCoordOnGrid, YCoordOnGrid, this);
     }
 }

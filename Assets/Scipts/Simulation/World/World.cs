@@ -14,51 +14,23 @@ public class World : MonoBehaviour
     [Header("How many animals to spawn")]
     public int[] AnimalCount;
 
-    private List<byte[,]> speciesLayers = new List<byte[,]>();
     private WorldGenerator generatedWorld;
-    private Dictionary<TargetType, byte[,]> targetTypeToLayers = new Dictionary<TargetType, byte[,]>();
-    private Dictionary<Species, byte[,]> speciesToLayers = new Dictionary<Species, byte[,]>();
 
-    //Layers
-
-    public byte[,] waterLayer { get => generatedWorld.layers[0]; }
-    public byte[,] moveLayer { get => generatedWorld.layers[1]; }
-    public byte[,] plantLayer { get => generatedWorld.layers[3]; }
-    public byte[,] chickenLayer { get => generatedWorld.layers[4]; }
+    public byte[,] moveLayer { get => generatedWorld.layers[0]; }
 
     public int YSize { get => generatedWorld.zSize; }
 
     public int XSize { get => generatedWorld.xSize; }
 
     public float TileSize { get => generatedWorld.TileScale; }
+    public List<LivingBeings>[,] LivingBeingsLayer { get => generatedWorld.livingLayer; }
+    public TileType[,] TileLayer { get => generatedWorld.tileLayer; }
 
     private void Start()
     {
         generatedWorld = this.GetComponent<WorldGenerator>();
 
-        SetupDictionaries();
-
         SpawnAnimals();
-    }
-
-    private void SetupDictionaries()
-    {
-        //Create the speciesLayers and add them to the dictionary
-        for (int i = 0; i <= Animals.Length; i++)
-        {
-            speciesLayers.Add(new byte[generatedWorld.xSize, generatedWorld.zSize]);
-        }
-        speciesLayers[0] = plantLayer;
-        for (byte i = 1; i <= Animals.Length; i++)
-        {
-            speciesToLayers.Add(Species.Plant + i, speciesLayers[i]);
-        }
-
-        //Manually adding the targetTypes to the dictionary (haven't found a better way :C)
-        targetTypeToLayers.Add(TargetType.Water, waterLayer);
-        targetTypeToLayers.Add(TargetType.Plant, plantLayer);
-        targetTypeToLayers.Add(TargetType.Explore, moveLayer);
-        targetTypeToLayers.Add(TargetType.Chicken, speciesToLayers[Species.Chicken]);
     }
 
     private void SpawnAnimals()
@@ -87,16 +59,42 @@ public class World : MonoBehaviour
 
     public void Kill(LivingBeings beingToKill)
     {
-        Destroy(beingToKill);
+        LivingBeingsLayer[beingToKill.XCoordOnGrid, beingToKill.YCoordOnGrid].Remove(beingToKill);
+        Destroy(beingToKill.gameObject);
     }
 
-    public Coord CreateNewTarget(TargetType targetType, Animal seekingAnimal)
+    public void RemoveFromLivingLayer(int xIndex, int yIndex, LivingBeings livingBeing)
     {
-        if (TargetType.Explore == targetType)
-        {
-            return Explore(seekingAnimal);
-        }
+        this.LivingBeingsLayer[xIndex, yIndex].Remove(livingBeing);
+    }
 
+    public void AddToLivingLayer(int xIndex, int yIndex, LivingBeings livingBeing)
+    {
+        this.LivingBeingsLayer[xIndex, yIndex].Add(livingBeing);
+    }
+
+    public Coord CreateNewTarget(TargetType targetType, Animal seekingAnimal, ref LivingBeings targetBeing)
+    {
+        switch (targetType)
+        {
+            case TargetType.Explore:
+                return Explore(seekingAnimal);
+                break;
+
+            case TargetType.Water:
+                return GetClosestTile(seekingAnimal, TileType.Water);
+                break;
+
+            default:
+
+                Species specie = (Species.Plant + (byte)targetType);
+                return GetClosestLivingBeing(seekingAnimal, specie, ref targetBeing);
+                break;
+        }
+    }
+
+    private Coord GetClosestTile(Animal seekingAnimal, TileType tileType)
+    {
         byte visionRange = seekingAnimal.RoundedVisionRange;
         int xCoord = seekingAnimal.XCoordOnGrid;
         int yCoord = seekingAnimal.YCoordOnGrid;
@@ -107,16 +105,14 @@ public class World : MonoBehaviour
         for (int i = xCoord - visionRange; i < xCoord + visionRange; i++)
         {
             if (i < 0 || i >= generatedWorld.xSize)
-            {
                 continue;
-            }
+
             for (int j = yCoord - visionRange; j < yCoord + visionRange; j++)
             {
                 if (j < 0 || j >= generatedWorld.zSize)
-                {
                     continue;
-                }
-                if (targetTypeToLayers[targetType][i, j] == 1)
+
+                if (generatedWorld.tileLayer[i, j] == tileType)
                 {
                     float dist = Coord.CalcDistance(i, j, seekingAnimal.XPos, seekingAnimal.ZPos);
                     if (dist < nearest)
@@ -128,9 +124,52 @@ public class World : MonoBehaviour
                 }
             }
         }
-        //The targetType is needed to avoid possible StackOverflowException
-        if (nearest != float.MaxValue || targetType == TargetType.Explore)
+
+        if (nearest != float.MaxValue)
+        {
             return nearestCoord;
+        }
+        else
+            return Explore(seekingAnimal);
+    }
+
+    private Coord GetClosestLivingBeing(Animal seekingAnimal, Species specie, ref LivingBeings targetBeing)
+    {
+        byte visionRange = seekingAnimal.RoundedVisionRange;
+        int xCoord = seekingAnimal.XCoordOnGrid;
+        int yCoord = seekingAnimal.YCoordOnGrid;
+
+        float nearest = float.MaxValue;
+        Coord nearestCoord = new Coord();
+
+        for (int i = xCoord - visionRange; i < xCoord + visionRange; i++)
+        {
+            if (i < 0 || i >= generatedWorld.xSize)
+                continue;
+
+            for (int j = yCoord - visionRange; j < yCoord + visionRange; j++)
+            {
+                if (j < 0 || j >= generatedWorld.zSize)
+                    continue;
+
+                if (generatedWorld.livingLayer[i, j].Find(x => x.Specie == specie) != null)
+                {
+                    float dist = Coord.CalcDistance(i, j, seekingAnimal.XPos, seekingAnimal.ZPos);
+                    if (dist < nearest)
+                    {
+                        nearest = dist;
+                        nearestCoord.x = i;
+                        nearestCoord.y = j;
+                    }
+                }
+            }
+        }
+
+        if (nearest != float.MaxValue)
+        {
+            targetBeing = generatedWorld.livingLayer[nearestCoord.IntX, nearestCoord.IntY].Find(x => x.Specie == specie);
+            return nearestCoord;
+        }
         else
             return Explore(seekingAnimal);
     }
@@ -162,58 +201,5 @@ public class World : MonoBehaviour
         PathMaker pathMaker = new PathMaker(current, target, 20, this);
 
         return pathMaker.CreatePath();
-        //if (Coord.CalcDistance(current, target) <= 0.5f)
-        //{
-        //    Stack<Coord> path = new Stack<Coord>();
-        //    path.Push(current);
-        //    return path;
-        //}
-        //else
-        //{
-        //    foreach (var moveTarget in GetPossibleMoveTargets(current, target).OrderBy(x => x.DistanceFromGoal))
-        //    {
-        //        Stack<Coord> path = CreatePath(moveTarget.MoveTarget, target);
-        //        if (path != null)
-        //        {
-        //            path.Push(current);
-        //        }
-        //    }
-        //    return null;
-        //}
-    }
-
-    public List<Node> GetPossibleMoveTargets(Coord current, Coord target)
-    {
-        float dist = float.MaxValue;
-        List<Node> moveTargets = new List<Node>();
-
-        if (current.x - 0.5f >= 0 && moveLayer[(int)Mathf.Round(current.x - 0.5f), Convert.ToInt32(current.y)] == 1)
-        {
-            dist = Coord.CalcDistance(target.x, target.y, current.x - 0.5f, current.y);
-            moveTargets.Add(new Node(new Coord(current.x - 0.5f, current.y), dist));
-        }
-        if (current.y - 0.5f >= 0 && moveLayer[Convert.ToInt32(current.x), (int)Mathf.Round(current.y - 0.5f)] == 1)
-        {
-            dist = Coord.CalcDistance(target.x, target.y, current.x, current.y - 0.5f);
-            //if (temp < least)
-            //{ }
-            moveTargets.Add(new Node(new Coord(current.x, current.y - 0.5f), dist));
-        }
-        if (current.x + 1 < generatedWorld.xSize && moveLayer[(int)Mathf.Round(current.x + 0.5f), Convert.ToInt32(current.y)] == 1)
-        {
-            dist = Coord.CalcDistance(target.x, target.y, current.x + 0.5f, current.y);
-            //if (temp < least)
-            //{ }
-            moveTargets.Add(new Node(new Coord(current.x + 0.5f, current.y), dist));
-        }
-        if (current.y + 1 < generatedWorld.zSize && moveLayer[Convert.ToInt32(current.x), (int)Mathf.Round(current.y + 0.5f)] == 1)
-        {
-            dist = Coord.CalcDistance(target.x, target.y, current.x, current.y + 0.5f);
-            //if (temp < least)
-            //{ }
-            moveTargets.Add(new Node(new Coord(current.x, current.y + 0.5f), dist));
-        }
-
-        return moveTargets;
     }
 }
