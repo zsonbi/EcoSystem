@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 /// <summary>
 /// Everything is a living being (even the plants which will be eaten by the animals)
@@ -9,6 +10,11 @@ public abstract class LivingBeings : MonoBehaviour
     /// The world where the being is
     /// </summary>
     protected World world;
+
+    /// <summary>
+    /// Beings which want to do something to this being
+    /// </summary>
+    protected List<Animal> beingTargetedBy = new List<Animal>();
 
     /// <summary>
     /// The x position
@@ -66,5 +72,40 @@ public abstract class LivingBeings : MonoBehaviour
         world.RemoveFromLivingLayer(XCoordOnGrid, YCoordOnGrid, this);
         this.GotEaten = true;
         return true;
+    }
+
+    //--------------------------------------------------------------------------------------
+    /// <summary>
+    /// Kills the being
+    /// </summary>
+    protected virtual void Die()
+    {
+        world.RemoveFromLivingLayer(XCoordOnGrid, YCoordOnGrid, this);
+        //Tell those who wanted this being that it is no longer avalible
+        foreach (var item in beingTargetedBy)
+        {
+            item.LostTarget();
+        }
+        world.Kill(this);
+    }
+
+    //-----------------------------------------------------------------------------------
+    /// <summary>
+    /// Add an animal to the list
+    /// </summary>
+    /// <param name="animal">Animal which is targeting this being</param>
+    public void BeingTargetedBy(Animal animal)
+    {
+        beingTargetedBy.Add(animal);
+    }
+
+    //-----------------------------------------------------------------------------------
+    /// <summary>
+    /// Remove an animal from the list
+    /// </summary>
+    /// <param name="animal">the animal which it should remove from the list</param>
+    public void NoLongerBeingTargetedBy(Animal animal)
+    {
+        beingTargetedBy.Remove(animal);
     }
 }

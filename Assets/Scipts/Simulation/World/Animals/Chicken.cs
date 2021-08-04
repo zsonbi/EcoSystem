@@ -52,10 +52,19 @@ public class Chicken : Animal
     /// </summary>
     protected override void ReachedTarget()
     {
+        //Tell the targetbeing that it's no longer tageting it
+        if (targetBeing != null)
+        {
+            targetBeing.NoLongerBeingTargetedBy(this);
+        }
+
         switch (currentTarget)
         {
             case TargetType.Chicken:
-
+                if (targetBeing != null && !targetBeing.GotEaten)
+                {
+                    this.Reproduce(targetBeing);
+                }
                 break;
 
             case TargetType.Plant:
@@ -77,20 +86,8 @@ public class Chicken : Animal
     ///  Reproduce (even chickens are better at it than me)
     /// </summary>
     /// <param name="otherOne">the other chicken</param>
-    public override void Reproduce(Animal otherOne)
+    public override void Reproduce(LivingBeings otherOne)
     {
-        //TODO simple but unbreakable
-        throw new System.NotImplementedException();
-    }
-
-    //------------------------------------------------------------
-    /// <summary>
-    /// Eat the chicken
-    /// </summary>
-    /// <returns>true if success false if it failed</returns>
-    public override bool GetEaten()
-    {
-        world.Kill(this);
-        return base.GetEaten();
+        Debug.Log("reproduce");
     }
 }

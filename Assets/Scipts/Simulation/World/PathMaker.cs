@@ -2,16 +2,30 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 
+/// <summary>
+/// This class can create a path to the specified target
+/// </summary>
 public class PathMaker
 {
+    /// <summary>
+    /// Each cell in the grid is a node
+    /// </summary>
     private class Node
     {
-        public float DistanceFromGoal { get; set; }
-        public bool Visited;
-        public bool passable;
-        public Coord position;
-        public byte[] indices = new byte[2];
+        public float DistanceFromGoal { get; set; } //Distance from the target
+        public bool Visited; //Was it already visited before
+        public bool passable; //Is it passable
+        public Coord position; //It's position
+        public byte[] indices = new byte[2]; //The index it is in the grid
 
+        //----------------------------------------------------------------------
+        /// <summary>
+        /// Creates a new instance of it
+        /// </summary>
+        /// <param name="xPos">The x position in the world</param>
+        /// <param name="yPos">The y position in the world</param>
+        /// <param name="passable">Is it passable</param>
+        /// <param name="indices">It's position in the grid</param>
         public Node(int xPos, int yPos, bool passable, byte[] indices)
         {
             this.passable = passable;
@@ -21,28 +35,48 @@ public class PathMaker
             this.indices = indices;
         }
 
+        //-------------------------------------------------------
+        /// <summary>
+        /// Creates an empty Cell
+        /// </summary>
         public Node()
         {
             this.passable = false;
         }
 
+        //-------------------------------------------------------
+        /// <summary>
+        /// Sets the distance
+        /// </summary>
+        /// <param name="dist">The distance to the target</param>
         public void SetDist(float dist)
         {
             this.DistanceFromGoal = dist;
         }
 
+        //--------------------------------------------------------
+        /// <summary>
+        /// Sets the visited property
+        /// </summary>
         public void Visit()
         {
             this.Visited = true;
         }
     }
 
-    private Node[,] map;
-    private World world;
-    private Stack<Coord> path;
-    private Node start;
-    private Node goal;
+    private Node[,] map; //The grid
+    private World world; //Reference to the world
+    private Stack<Coord> path; //Path which it will return
+    private Node start; //Start of the path
+    private Node goal; //The target
 
+    /// <summary>
+    /// Creates a new instance of the PathMaker
+    /// </summary>
+    /// <param name="start">The starting position</param>
+    /// <param name="goal">The target's position</param>
+    /// <param name="Size">The size of the grid (x size = Size *2, y size = Size*2)</param>
+    /// <param name="world">The world it is in</param>
     public PathMaker(Coord start, Coord goal, byte Size, World world)
     {
         this.world = world;
@@ -50,6 +84,7 @@ public class PathMaker
         int startYCoord = (int)Mathf.Round(start.y) - Size;
 
         map = new Node[Size * 2, Size * 2];
+        //Fill in the grid
         for (byte i = 0; i < map.GetLength(0); i++)
         {
             for (byte j = 0; j < map.GetLength(1); j++)
@@ -63,15 +98,21 @@ public class PathMaker
             }
         }
 
+        //Set the goal and the start
         this.goal = map[(int)goal.x - startXCoord, (int)goal.y - startYCoord];
-        this.goal.passable = true;
+        this.goal.passable = true; //If it is water make it passable (maybe someday I will make this better)
         this.start = map[(int)start.x - startXCoord, (int)start.y - startYCoord];
     }
 
+    //---------------------------------------------------------------------
+    /// <summary>
+    /// Creates a new path
+    /// </summary>
+    /// <returns>The path</returns>
     public Stack<Coord> CreatePath()
     {
         path = new Stack<Coord>();
-
+        //Search for the goal
         if (!SearchForGoal(start))
         {
             Debug.Log("No path found");
@@ -80,19 +121,26 @@ public class PathMaker
         return path;
     }
 
+    //-------------------------------------------------------------
+    //Checks if the node is valid for being part of the path
     private bool CheckIfValid(Node node)
     {
         return node.passable && !node.Visited;
     }
 
+    //------------------------------------------------------------
+    //Search for the node recursively
+    //Returns true if it managed to find the goal, returns false if it didn't manage to find the goal
     private bool SearchForGoal(Node current)
     {
-        current.Visit();
+        current.Visit(); //Visit the node
+        //Check if it is the goal
         if (current.Equals(goal))
         {
             return true;
         }
 
+        //Get the possible ways it can go
         List<Node> possibleWays = new List<Node>();
         if (current.indices[0] - 1 >= 0 && CheckIfValid(map[current.indices[0] - 1, current.indices[1]]))
         {
@@ -112,11 +160,13 @@ public class PathMaker
         {
             possibleWays.Add(map[current.indices[0], current.indices[1] + 1]);
         }
+        //Calculate their distance from the goal
         for (int i = 0; i < possibleWays.Count; i++)
         {
             possibleWays[i].SetDist(Coord.CalcDistance(goal.position, possibleWays[i].position));
         }
 
+        //Order them by the distance and try them each
         foreach (var item in possibleWays.OrderBy(x => x.DistanceFromGoal))
         {
             if (SearchForGoal(item))
@@ -125,7 +175,7 @@ public class PathMaker
                 return true;
             }
         }
-
+        //If none of the ways were good return false
         return false;
     }
 }

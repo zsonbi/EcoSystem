@@ -49,14 +49,14 @@ public abstract class Animal : LivingBeings
     /// </summary>
     public Gender Gender { get; protected set; }
 
-    protected Coord target = null;
-    protected float timeToMove;
-    private float time = 0;
-    private Coord moveTarget;
-    private Coord basePosition;
-    protected TargetType currentTarget;
-    private Stack<Coord> path;
-    private LivingBeings targetBeing;
+    protected Coord target = null; //The end target
+    protected float timeToMove; //The time it takes for it to move one square
+    private float time = 0; //The time since last square
+    private Coord moveTarget; //The next square where it wants to move
+    private Coord basePosition; //Where it was so we can move it according to the time ellapsed
+    protected TargetType currentTarget; //Type of the current target
+    private Stack<Coord> path; //The path to the target
+    protected LivingBeings targetBeing; //The being which is being targeted
 
     //**********************************************************************************
     //Abstract methods
@@ -69,7 +69,7 @@ public abstract class Animal : LivingBeings
     ///  Reproduce (even chickens are better at it than me)
     /// </summary>
     /// <param name="otherOne">the other chicken</param>
-    public abstract void Reproduce(Animal otherOne);
+    public abstract void Reproduce(LivingBeings otherOne);
 
     /// <summary>
     /// Determine what should it look for in the meantime
@@ -94,38 +94,41 @@ public abstract class Animal : LivingBeings
             targetBeing = null;
             target = world.CreateNewTarget(currentTarget, this, ref targetBeing);
             path = world.CreatePath(new Coord(XPos, ZPos), target);
-            PopNextPathNode();
+            GetNextMoveTarget();
             time = 0;
+            if (targetBeing != null)
+            {
+                targetBeing.BeingTargetedBy(this);
+            }
+            Debug.Log(currentTarget.ToString());
         }
 
         //After a certain time get a new movetarget
         if (time >= timeToMove)
         {
             time = 0;
-            PopNextPathNode();
+            GetNextMoveTarget();
         }
 
         Hunger -= Time.deltaTime;
         Thirst -= Time.deltaTime;
+        this.ReproductionUrge += Time.deltaTime;
         //if the hunger or thirst reached 0 kill it
         if (Hunger <= 0 || Thirst <= 0)
         {
             Debug.Log("Dead :(");
-            world.Kill(this);
+            Die();
         }
-
-        Debug.Log(currentTarget.ToString());
     }
 
-    private void PopNextPathNode()
+    //----------------------------------------------------------------
+    /// <summary>
+    /// Get the next moveTarge
+    /// </summary>
+    private void GetNextMoveTarget()
     {
         if (path.Count > 0)
         {
-            if (targetBeing != null && targetBeing.GotEaten)
-            {
-                target = null;
-                return;
-            }
             moveTarget = path.Pop();
         }
         else
@@ -147,7 +150,10 @@ public abstract class Animal : LivingBeings
     {
         if (Hunger > maxHunger * 0.6f && Thirst > maxThirst * 0.6f)
         {
-            return TargetType.Mate;
+            if (ReproductionUrge > 20f)
+                return TargetType.Mate;
+            else
+                return TargetType.Explore;
         }
         else if (Hunger <= Thirst)
         {
@@ -157,6 +163,15 @@ public abstract class Animal : LivingBeings
         {
             return TargetType.Water;
         }
+    }
+
+    //------------------------------------------------------------------------------
+    /// <summary>
+    /// Lose it's current target
+    /// </summary>
+    public void LostTarget()
+    {
+        this.target = null;
     }
 
     //---------------------------------------------------------------------------------
@@ -181,8 +196,32 @@ public abstract class Animal : LivingBeings
     /// </summary>
     protected void Eat()
     {
-        if (targetBeing != null && targetBeing.GetEaten())
+        if (targetBeing.GetEaten())
             this.Hunger = maxHunger;
+    }
+
+    //---------------------------------------------------------------------------
+    /// <summary>
+    /// Get eaten
+    /// </summary>
+    /// <returns>true if it was a success false if it failed</returns>
+    public override bool GetEaten()
+    {
+        Die();
+        return base.GetEaten();
+    }
+
+    //----------------------------------------------------------------------------------
+    /// <summary>
+    /// Kills the animal
+    /// </summary>
+    protected override void Die()
+    {
+        if (targetBeing != null)
+        {
+            targetBeing.BeingTargetedBy(this);
+        }
+        base.Die();
     }
 
     //-------------------------------------------------------------------------------

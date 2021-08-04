@@ -6,7 +6,7 @@ using UnityEngine;
 public class EdibleBush : LivingBeings
 {
     private static float defaultTimeToRegrow = 10f; //The number of seconds it takes for the bus to regrow
-    private static Vector3 defaultScale = new Vector3(0.5f, 0.5f, 0.5f);
+    private static Vector3 defaultScale = new Vector3(0.5f, 0.5f, 0.5f); //The default scale of the bush
     private float timeTillRegrow = 0f; //The current progress of the regrowth
 
     //------------------------------------------------------------

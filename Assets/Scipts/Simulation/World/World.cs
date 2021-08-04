@@ -14,18 +14,40 @@ public class World : MonoBehaviour
     [Header("How many animals to spawn")]
     public int[] AnimalCount;
 
-    private WorldGenerator generatedWorld;
+    private WorldGenerator generatedWorld; //The world which was generated at the start
 
+    /// <summary>
+    /// 1 where the area is passable 0 where it is blocked
+    /// </summary>
     public byte[,] moveLayer { get => generatedWorld.layers[0]; }
 
+    /// <summary>
+    /// Y size of the world
+    /// </summary>
     public int YSize { get => generatedWorld.zSize; }
 
+    /// <summary>
+    /// X size of the world
+    /// </summary>
     public int XSize { get => generatedWorld.xSize; }
 
+    /// <summary>
+    /// Size of one Tile
+    /// </summary>
     public float TileSize { get => generatedWorld.TileScale; }
+
+    /// <summary>
+    /// The beings in each cell
+    /// </summary>
     public List<LivingBeings>[,] LivingBeingsLayer { get => generatedWorld.livingLayer; }
+
+    /// <summary>
+    /// What type of tile it is on each cell
+    /// </summary>
     public TileType[,] TileLayer { get => generatedWorld.tileLayer; }
 
+    //---------------------------------------------------------------
+    //Runs before first Update
     private void Start()
     {
         generatedWorld = this.GetComponent<WorldGenerator>();
@@ -33,6 +55,8 @@ public class World : MonoBehaviour
         SpawnAnimals();
     }
 
+    //---------------------------------------------------------------
+    //Spawn the animals
     private void SpawnAnimals()
     {
         for (int i = 0; i < Animals.Length; i++)
@@ -57,22 +81,49 @@ public class World : MonoBehaviour
         }
     }
 
+    //------------------------------------------------------------------
+    /// <summary>
+    /// Kill the being and remove it from the grid
+    /// </summary>
+    /// <param name="beingToKill">The being which is to be killed</param>
     public void Kill(LivingBeings beingToKill)
     {
         LivingBeingsLayer[beingToKill.XCoordOnGrid, beingToKill.YCoordOnGrid].Remove(beingToKill);
         Destroy(beingToKill.gameObject);
     }
 
+    //-------------------------------------------------------------------
+    /// <summary>
+    /// Remove the being from the specified index from the livingLayer
+    /// </summary>
+    /// <param name="xIndex">The x index</param>
+    /// <param name="yIndex">The y index</param>
+    /// <param name="livingBeing">The being to remove</param>
     public void RemoveFromLivingLayer(int xIndex, int yIndex, LivingBeings livingBeing)
     {
         this.LivingBeingsLayer[xIndex, yIndex].Remove(livingBeing);
     }
 
+    //-------------------------------------------------------------------
+    /// <summary>
+    /// Add the being to the specified index from the livingLayer
+    /// </summary>
+    /// <param name="xIndex">The x index</param>
+    /// <param name="yIndex">The y index</param>
+    /// <param name="livingBeing">The being to add</param>
     public void AddToLivingLayer(int xIndex, int yIndex, LivingBeings livingBeing)
     {
         this.LivingBeingsLayer[xIndex, yIndex].Add(livingBeing);
     }
 
+    //---------------------------------------------------------------------
+    /// <summary>
+    /// Creates a new target
+    /// </summary>
+    /// <param name="targetType">What type of target we're looking for</param>
+    /// <param name="seekingAnimal">The animal which is looking for a target</param>
+    /// <param name="targetBeing">Reference to the being which may be selected as a target </param>
+    /// <returns>The position of the target</returns>
     public Coord CreateNewTarget(TargetType targetType, Animal seekingAnimal, ref LivingBeings targetBeing)
     {
         switch (targetType)
@@ -93,6 +144,8 @@ public class World : MonoBehaviour
         }
     }
 
+    //---------------------------------------------------------------------
+    //Gets the closest tile to the animal
     private Coord GetClosestTile(Animal seekingAnimal, TileType tileType)
     {
         byte visionRange = seekingAnimal.RoundedVisionRange;
@@ -133,6 +186,8 @@ public class World : MonoBehaviour
             return Explore(seekingAnimal);
     }
 
+    //--------------------------------------------------------------------
+    //Gets the closest livingBeing to the animal
     private Coord GetClosestLivingBeing(Animal seekingAnimal, Species specie, ref LivingBeings targetBeing)
     {
         byte visionRange = seekingAnimal.RoundedVisionRange;
@@ -174,6 +229,8 @@ public class World : MonoBehaviour
             return Explore(seekingAnimal);
     }
 
+    //---------------------------------------------------------------------
+    //Just explore the map get a random coordinate in viewDistance and set it as the target
     private Coord Explore(Animal seekingAnimal)
     {
         int counter = 0;
@@ -196,6 +253,13 @@ public class World : MonoBehaviour
         } while (true);
     }
 
+    //---------------------------------------------------------------------
+    /// <summary>
+    /// Creates a path to the target
+    /// </summary>
+    /// <param name="current">Current position</param>
+    /// <param name="target">The target's position</param>
+    /// <returns></returns>
     public Stack<Coord> CreatePath(Coord current, Coord target)
     {
         PathMaker pathMaker = new PathMaker(current, target, 20, this);
