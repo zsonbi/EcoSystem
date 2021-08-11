@@ -21,6 +21,7 @@ public class Chicken : Animal
         base.Speed = Random.Range(0.2f, maxSpeed);
         base.VisionRange = Random.Range(4f, maxVisionRange);
         base.timeToMove = 1f / Speed;
+        SetInitialStatBarMaxValues(Hunger, Thirst, maxHorniness);
     }
 
     //--------------------------------------------------------------
@@ -33,15 +34,19 @@ public class Chicken : Animal
         switch (base.GetMostImportantTargetType())
         {
             case TargetType.Food:
+                moveState = MoveState.Moving;
                 return TargetType.Plant;
 
             case TargetType.Water:
+                moveState = MoveState.Moving;
                 return TargetType.Water;
 
             case TargetType.Mate:
+                moveState = MoveState.Meeting;
                 return TargetType.Chicken;
 
             default:
+                moveState = MoveState.Moving;
                 return TargetType.Explore;
         }
     }
@@ -68,7 +73,8 @@ public class Chicken : Animal
                 break;
 
             case TargetType.Plant:
-                Eat();
+                if (targetBeing != null)
+                    Eat();
                 break;
 
             case TargetType.Water:

@@ -14,6 +14,9 @@ public class World : MonoBehaviour
     [Header("How many animals to spawn")]
     public int[] AnimalCount;
 
+    [Header("Does animals have stats above their heads")]
+    public bool ShowStatBars = false;
+
     private WorldGenerator generatedWorld; //The world which was generated at the start
 
     /// <summary>
@@ -116,6 +119,19 @@ public class World : MonoBehaviour
         this.LivingBeingsLayer[xIndex, yIndex].Add(livingBeing);
     }
 
+    //------------------------------------------------------------------
+    /// <summary>
+    /// Move the animal to the next cell
+    /// </summary>
+    /// <param name="originalCoord">It's original position</param>
+    /// <param name="newCoord">It's new position</param>
+    /// <param name="animal">The animal to move</param>
+    public void Move(Coord originalCoord, Coord newCoord, Animal animal)
+    {
+        this.LivingBeingsLayer[originalCoord.IntX, originalCoord.IntY].Remove(animal);
+        this.LivingBeingsLayer[newCoord.IntX, newCoord.IntY].Add(animal);
+    }
+
     //---------------------------------------------------------------------
     /// <summary>
     /// Creates a new target
@@ -124,7 +140,7 @@ public class World : MonoBehaviour
     /// <param name="seekingAnimal">The animal which is looking for a target</param>
     /// <param name="targetBeing">Reference to the being which may be selected as a target </param>
     /// <returns>The position of the target</returns>
-    public Coord CreateNewTarget(TargetType targetType, Animal seekingAnimal, ref LivingBeings targetBeing)
+    public Coord CreateNewTarget(ref TargetType targetType, Animal seekingAnimal, ref LivingBeings targetBeing)
     {
         switch (targetType)
         {
@@ -133,20 +149,19 @@ public class World : MonoBehaviour
                 break;
 
             case TargetType.Water:
-                return GetClosestTile(seekingAnimal, TileType.Water);
+                return GetClosestTile(seekingAnimal, TileType.Water, ref targetType);
                 break;
 
             default:
 
-                Species specie = (Species.Plant + (byte)targetType);
-                return GetClosestLivingBeing(seekingAnimal, specie, ref targetBeing);
+                return GetClosestLivingBeing(seekingAnimal, ref targetBeing, ref targetType);
                 break;
         }
     }
 
     //---------------------------------------------------------------------
     //Gets the closest tile to the animal
-    private Coord GetClosestTile(Animal seekingAnimal, TileType tileType)
+    private Coord GetClosestTile(Animal seekingAnimal, TileType tileType, ref TargetType targetType)
     {
         byte visionRange = seekingAnimal.RoundedVisionRange;
         int xCoord = seekingAnimal.XCoordOnGrid;
@@ -183,13 +198,17 @@ public class World : MonoBehaviour
             return nearestCoord;
         }
         else
+        {
+            targetType = TargetType.Explore;
             return Explore(seekingAnimal);
+        }
     }
 
     //--------------------------------------------------------------------
     //Gets the closest livingBeing to the animal
-    private Coord GetClosestLivingBeing(Animal seekingAnimal, Species specie, ref LivingBeings targetBeing)
+    private Coord GetClosestLivingBeing(Animal seekingAnimal, ref LivingBeings targetBeing, ref TargetType targetType)
     {
+        Species specie = (Species.Plant + (byte)targetType);
         byte visionRange = seekingAnimal.RoundedVisionRange;
         int xCoord = seekingAnimal.XCoordOnGrid;
         int yCoord = seekingAnimal.YCoordOnGrid;
@@ -226,7 +245,10 @@ public class World : MonoBehaviour
             return nearestCoord;
         }
         else
+        {
+            targetType = TargetType.Explore;
             return Explore(seekingAnimal);
+        }
     }
 
     //---------------------------------------------------------------------
@@ -265,5 +287,97 @@ public class World : MonoBehaviour
         PathMaker pathMaker = new PathMaker(current, target, 20, this);
 
         return pathMaker.CreatePath();
+    }
+
+    public Coord GetBestMoveTarget(Coord current, Coord target)
+    {
+        float leastDist = float.MaxValue;
+        Coord moveTarget = null;
+        float tempDist;
+        int currentXIndex = (int)Mathf.Round(current.x);
+        int currentYIndex = (int)Mathf.Round(current.y);
+
+        if (currentXIndex - 1f >= 0 && moveLayer[currentXIndex - 1, currentYIndex] == 1)
+        {
+            leastDist = Coord.CalcDistance(target.x, target.y, currentXIndex - 1f, currentYIndex);
+            moveTarget = new Coord(currentXIndex - 1f, currentYIndex);
+        }
+        if (currentYIndex - 1f >= 0 && moveLayer[currentXIndex, currentYIndex - 1] == 1)
+        {
+            tempDist = Coord.CalcDistance(target.x, target.y, currentXIndex, currentYIndex - 1.0f);
+            if (tempDist < leastDist)
+            {
+                moveTarget = new Coord(currentXIndex, currentYIndex - 1.0f);
+            }
+        }
+        if (currentXIndex + 1 < generatedWorld.xSize && moveLayer[currentXIndex + 1, currentYIndex] == 1)
+        {
+            tempDist = Coord.CalcDistance(target.x, target.y, currentXIndex + 1.0f, currentYIndex);
+            if (tempDist < leastDist)
+            {
+                moveTarget = new Coord(currentXIndex + 1.0f, currentYIndex);
+            }
+        }
+        if (currentYIndex + 1 < generatedWorld.zSize && moveLayer[currentXIndex, currentYIndex + 1] == 1)
+        {
+            tempDist = Coord.CalcDistance(target.x, target.y, currentXIndex, currentYIndex + 1.0f);
+            if (tempDist < leastDist)
+            {
+                moveTarget = new Coord(currentXIndex, currentYIndex + 1.0f);
+            }
+        }
+
+        return moveTarget;
+    }
+
+    public bool AskOutNearbyAnimals(Animal theOneAskingOut, byte range, ref LivingBeings theOneWhichAccepted)
+    {
+        int xCoord = theOneAskingOut.XCoordOnGrid;
+        int yCoord = theOneAskingOut.YCoordOnGrid;
+
+        for (int i = xCoord - range; i < xCoord + range; i++)
+        {
+            if (i < 0 || i >= generatedWorld.xSize)
+                continue;
+
+            for (int j = yCoord - range; j < yCoord + range; j++)
+            {
+                if (j < 0 || j >= generatedWorld.zSize)
+                    continue;
+
+                List<LivingBeings> sameSpecies = generatedWorld.livingLayer[i, j].FindAll(x => x.Specie == theOneAskingOut.Specie && ((Animal)x).Gender != theOneAskingOut.Gender);
+                for (int listIndex = 0; listIndex < sameSpecies.Count; listIndex++)
+                {
+                    if (((Animal)sameSpecies[listIndex]).GetAskedOut())
+                    {
+                        theOneWhichAccepted = sameSpecies[listIndex];
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private void OnDrawGizmos()
+    {
+        Gizmos.color = new Color(0f, 1f, 0f);
+        for (int i = 0; i < XSize; i++)
+        {
+            for (int j = 0; j < YSize; j++)
+            {
+                if (generatedWorld.livingLayer[i, j].Find(x => x.Specie == Species.Plant) != null)
+                {
+                    Gizmos.color = new Color(0f, 1f, 0f);
+                    Gizmos.DrawSphere(new Vector3(i, 1f, j), 0.1f);
+                }
+                else if (generatedWorld.livingLayer[i, j].Find(x => x.Specie == Species.Chicken) != null)
+                {
+                    Gizmos.color = new Color(1f, 1f, 1f);
+                    Gizmos.DrawSphere(new Vector3(i, 1f, j), 0.1f);
+                }
+            }
+        }
     }
 }

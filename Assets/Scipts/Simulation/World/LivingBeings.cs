@@ -7,6 +7,11 @@ using System.Collections.Generic;
 public abstract class LivingBeings : MonoBehaviour
 {
     /// <summary>
+    /// Controls the statbars
+    /// </summary>
+    public StatBarController StatBarController;
+
+    /// <summary>
     /// The world where the being is
     /// </summary>
     protected World world;
@@ -15,6 +20,11 @@ public abstract class LivingBeings : MonoBehaviour
     /// Beings which want to do something to this being
     /// </summary>
     protected List<Animal> beingTargetedBy = new List<Animal>();
+
+    /// <summary>
+    /// Where it was so we can move it according to the time ellapsed
+    /// </summary>
+    protected Coord basePosition;
 
     /// <summary>
     /// The x position
@@ -56,6 +66,9 @@ public abstract class LivingBeings : MonoBehaviour
     private void Start()
     {
         this.world = this.GetComponentInParent<World>();
+        basePosition = new Coord(XPos, YPos);
+        if (StatBarController != null)
+            StatBarController.gameObject.SetActive(world.ShowStatBars);
     }
 
     //----------------------------------------------------------------------------------
@@ -71,6 +84,11 @@ public abstract class LivingBeings : MonoBehaviour
         }
         world.RemoveFromLivingLayer(XCoordOnGrid, YCoordOnGrid, this);
         this.GotEaten = true;
+        for (int i = 0; i < beingTargetedBy.Count; i++)
+        {
+            beingTargetedBy[i].LostTarget();
+        }
+        beingTargetedBy.Clear();
         return true;
     }
 
@@ -82,9 +100,9 @@ public abstract class LivingBeings : MonoBehaviour
     {
         world.RemoveFromLivingLayer(XCoordOnGrid, YCoordOnGrid, this);
         //Tell those who wanted this being that it is no longer avalible
-        foreach (var item in beingTargetedBy)
+        for (int i = 0; i < beingTargetedBy.Count; i++)
         {
-            item.LostTarget();
+            beingTargetedBy[i].LostTarget();
         }
         world.Kill(this);
     }

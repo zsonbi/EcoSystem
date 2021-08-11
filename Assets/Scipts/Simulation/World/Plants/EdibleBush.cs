@@ -10,7 +10,7 @@ public class EdibleBush : LivingBeings
     private float timeTillRegrow = 0f; //The current progress of the regrowth
 
     //------------------------------------------------------------
-    //Runs before the first Update
+    //Runs when the script is loaded
     private void Awake()
     {
         this.Specie = Species.Plant;

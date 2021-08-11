@@ -6,8 +6,9 @@ using UnityEngine;
 /// </summary>
 public abstract class Animal : LivingBeings
 {
-    protected static float maxHunger = 30f; //The time it takes for it to starve to death
-    protected static float maxThirst = 30f; //The time it takes for it to die of thirst
+    protected static float maxHunger = 90f; //The time it takes for it to starve to death
+    protected static float maxThirst = 90f; //The time it takes for it to die of thirst
+    protected static float maxHorniness = 50f;
 
     /// <summary>
     /// The food types the animal can eat
@@ -37,7 +38,7 @@ public abstract class Animal : LivingBeings
     /// <summary>
     /// How horny it is
     /// </summary>
-    public float ReproductionUrge { get; protected set; }
+    public float Horniness { get; protected set; }
 
     /// <summary>
     /// Round the vision and convert it to byte
@@ -49,14 +50,19 @@ public abstract class Animal : LivingBeings
     /// </summary>
     public Gender Gender { get; protected set; }
 
+    /// <summary>
+    /// The next square where it wants to move
+    /// </summary>
+    public Coord moveTarget { get; private set; }
+
     protected Coord target = null; //The end target
     protected float timeToMove; //The time it takes for it to move one square
     private float time = 0; //The time since last square
-    private Coord moveTarget; //The next square where it wants to move
-    private Coord basePosition; //Where it was so we can move it according to the time ellapsed
+
     protected TargetType currentTarget; //Type of the current target
     private Stack<Coord> path; //The path to the target
     protected LivingBeings targetBeing; //The being which is being targeted
+    protected MoveState moveState;
 
     //**********************************************************************************
     //Abstract methods
@@ -90,17 +96,7 @@ public abstract class Animal : LivingBeings
         }
         else
         {
-            currentTarget = DecideTargetPriority();
-            targetBeing = null;
-            target = world.CreateNewTarget(currentTarget, this, ref targetBeing);
-            path = world.CreatePath(new Coord(XPos, ZPos), target);
-            GetNextMoveTarget();
-            time = 0;
-            if (targetBeing != null)
-            {
-                targetBeing.BeingTargetedBy(this);
-            }
-            Debug.Log(currentTarget.ToString());
+            GetNewTarget();
         }
 
         //After a certain time get a new movetarget
@@ -110,9 +106,15 @@ public abstract class Animal : LivingBeings
             GetNextMoveTarget();
         }
 
+        //Update the stats
         Hunger -= Time.deltaTime;
         Thirst -= Time.deltaTime;
-        this.ReproductionUrge += Time.deltaTime;
+        this.Horniness += Time.deltaTime;
+
+        //Update the stat bars
+        if (world.ShowStatBars)
+            StatBarController.UpdateSliders(Hunger, Thirst, Horniness);
+
         //if the hunger or thirst reached 0 kill it
         if (Hunger <= 0 || Thirst <= 0)
         {
@@ -127,18 +129,112 @@ public abstract class Animal : LivingBeings
     /// </summary>
     private void GetNextMoveTarget()
     {
-        if (path.Count > 0)
+        switch (moveState)
         {
-            moveTarget = path.Pop();
+            case MoveState.Waiting:
+                if (moveTarget.Equals(new Coord(targetBeing.XPos, targetBeing.ZPos)))
+                {
+                    ReachedTarget();
+                }
+                basePosition = new Coord(XCoordOnGrid, YCoordOnGrid);
+                return;
+                break;
+
+            case MoveState.Moving:
+                if (path.Count > 0)
+                {
+                    moveTarget = path.Pop();
+                }
+                else
+                {
+                    ReachedTarget();
+                    return;
+                }
+                break;
+
+            case MoveState.Fleeing:
+                //TODO
+                break;
+
+            case MoveState.Meeting:
+                if (target.Equals(new Coord(XPos, ZPos)))
+                {
+                    moveState = MoveState.Waiting;
+                    return;
+                }
+                moveTarget = world.GetBestMoveTarget(new Coord(XPos, ZPos), new Coord(targetBeing.XPos, targetBeing.ZPos));
+                break;
+
+            case MoveState.Hunting:
+                if (CheckIfReachedTarget())
+                {
+                    ReachedTarget();
+                    return;
+                }
+                moveTarget = world.GetBestMoveTarget(new Coord(XPos, ZPos), new Coord(targetBeing.XPos, targetBeing.ZPos));
+                break;
+
+            default:
+                break;
+        }
+        world.Move(basePosition, new Coord(XCoordOnGrid, YCoordOnGrid), this);
+        basePosition = new Coord(XPos, ZPos);
+
+        float angle = Mathf.Rad2Deg * Coord.CalcAngle(basePosition, moveTarget);
+        this.transform.eulerAngles = new Vector3(0, angle + (angle % 180 == 0 ? 90f : -90f), 0);
+    }
+
+    private void GetNewTarget()
+    {
+        currentTarget = DecideTargetPriority();
+        targetBeing = null;
+
+        switch (moveState)
+        {
+            case MoveState.Moving:
+                target = world.CreateNewTarget(ref currentTarget, this, ref targetBeing);
+                path = world.CreatePath(new Coord(XPos, ZPos), target);
+                break;
+
+            case MoveState.Fleeing:
+                break;
+
+            case MoveState.Meeting:
+                if (world.AskOutNearbyAnimals(this, RoundedVisionRange, ref targetBeing))
+                {
+                    target = ((Animal)targetBeing).moveTarget;
+                    path = world.CreatePath(new Coord(XPos, ZPos), target);
+                }
+                else
+                {
+                    Horniness = 0f;
+                    GetNewTarget();
+                    return;
+                }
+                break;
+
+            case MoveState.Hunting:
+                break;
+
+            default:
+                break;
+        }
+
+        if (targetBeing != null)
+        {
+            targetBeing.BeingTargetedBy(this);
         }
         else
         {
-            ReachedTarget();
-            return;
+            if (moveState != MoveState.Moving)
+            {
+                moveState = MoveState.Moving;
+            }
         }
-        basePosition = new Coord(XPos, ZPos);
-        float angle = Mathf.Rad2Deg * Coord.CalcAngle(basePosition, moveTarget);
-        this.transform.eulerAngles = new Vector3(0, angle + (angle % 180 == 0 ? 90f : -90f), 0);
+        GetNextMoveTarget();
+        time = 0;
+
+        Debug.Log(currentTarget.ToString());
     }
 
     //----------------------------------------------------------------------
@@ -150,8 +246,11 @@ public abstract class Animal : LivingBeings
     {
         if (Hunger > maxHunger * 0.6f && Thirst > maxThirst * 0.6f)
         {
-            if (ReproductionUrge > 20f)
+            if (Horniness >= maxHorniness)
+            {
+                Debug.Log("HORNY");
                 return TargetType.Mate;
+            }
             else
                 return TargetType.Explore;
         }
@@ -171,7 +270,9 @@ public abstract class Animal : LivingBeings
     /// </summary>
     public void LostTarget()
     {
+        Debug.Log("Lost Target");
         this.target = null;
+        GetNewTarget();
     }
 
     //---------------------------------------------------------------------------------
@@ -196,6 +297,8 @@ public abstract class Animal : LivingBeings
     /// </summary>
     protected void Eat()
     {
+        targetBeing.NoLongerBeingTargetedBy(this);
+
         if (targetBeing.GetEaten())
             this.Hunger = maxHunger;
     }
@@ -219,9 +322,36 @@ public abstract class Animal : LivingBeings
     {
         if (targetBeing != null)
         {
-            targetBeing.BeingTargetedBy(this);
+            targetBeing.NoLongerBeingTargetedBy(this);
         }
         base.Die();
+    }
+
+    public bool GetAskedOut()
+    {
+        if (TargetType.Explore == currentTarget)
+        {
+            if (Horniness > 20f)
+            {
+                target = moveTarget;
+                moveState = MoveState.Waiting;
+                Debug.Log("Got Asked out");
+                return true;
+            }
+        }
+        return false;
+    }
+
+    protected bool CheckIfReachedTarget()
+    {
+        return Coord.CalcDistance(XPos, ZPos, targetBeing.XPos, targetBeing.ZPos) < 0.2f;
+    }
+
+    protected void SetInitialStatBarMaxValues(float maxHunger, float maxThirst, float maxHorniness)
+    {
+        this.StatBarController.SetMaxHungerValue(maxHunger);
+        this.StatBarController.SetMaxThirstValue(maxThirst);
+        this.StatBarController.SetMaxHornyValue(maxHorniness);
     }
 
     //-------------------------------------------------------------------------------
@@ -232,8 +362,9 @@ public abstract class Animal : LivingBeings
     {
         if (target == null)
             return;
-
+        Gizmos.color = new Color(0.3f, 0.3f, 0.3f);
         Gizmos.DrawSphere(new Vector3(moveTarget.x, YPos, moveTarget.y), 0.1f);
+        Gizmos.color = new Color(0, 0, 1);
         Gizmos.DrawSphere(new Vector3(target.x, YPos, target.y), 0.1f);
     }
 }
