@@ -6,6 +6,9 @@ using System.Collections.Generic;
 /// </summary>
 public abstract class LivingBeings : MonoBehaviour
 {
+    protected int xPosInGrid;
+    protected int yPosInGrid;
+
     /// <summary>
     /// Controls the statbars
     /// </summary>
@@ -24,7 +27,7 @@ public abstract class LivingBeings : MonoBehaviour
     /// <summary>
     /// Where it was so we can move it according to the time ellapsed
     /// </summary>
-    protected Coord basePosition;
+    public Coord basePosition { get; protected set; }
 
     /// <summary>
     /// The x position
@@ -65,6 +68,9 @@ public abstract class LivingBeings : MonoBehaviour
     //Runs when the script is loaded
     private void Start()
     {
+        xPosInGrid = (int)XPos;
+        yPosInGrid = (int)ZPos;
+
         this.world = this.GetComponentInParent<World>();
         basePosition = new Coord(XPos, YPos);
         if (StatBarController != null)
@@ -82,13 +88,9 @@ public abstract class LivingBeings : MonoBehaviour
         {
             return false;
         }
-        world.RemoveFromLivingLayer(XCoordOnGrid, YCoordOnGrid, this);
+        world.RemoveFromLivingLayer(xPosInGrid, yPosInGrid, this);
         this.GotEaten = true;
-        for (int i = 0; i < beingTargetedBy.Count; i++)
-        {
-            beingTargetedBy[i].LostTarget();
-        }
-        beingTargetedBy.Clear();
+        ClearBeingTargetedList();
         return true;
     }
 
@@ -98,12 +100,8 @@ public abstract class LivingBeings : MonoBehaviour
     /// </summary>
     protected virtual void Die()
     {
-        world.RemoveFromLivingLayer(XCoordOnGrid, YCoordOnGrid, this);
-        //Tell those who wanted this being that it is no longer avalible
-        for (int i = 0; i < beingTargetedBy.Count; i++)
-        {
-            beingTargetedBy[i].LostTarget();
-        }
+        world.RemoveFromLivingLayer(xPosInGrid, yPosInGrid, this);
+        ClearBeingTargetedList();
         world.Kill(this);
     }
 
@@ -124,6 +122,35 @@ public abstract class LivingBeings : MonoBehaviour
     /// <param name="animal">the animal which it should remove from the list</param>
     public void NoLongerBeingTargetedBy(Animal animal)
     {
+        //   beingTargetedBy.RemoveAll(x => x == animal);
         beingTargetedBy.Remove(animal);
+    }
+
+    /// <summary>
+    /// Clear the list and notify the beings that it is no longer avalible
+    /// </summary>
+    public void ClearBeingTargetedList()
+    {
+        //Tell those who wanted this being that it is no longer avalible
+        for (int i = 0; i < beingTargetedBy.Count; i++)
+        {
+            beingTargetedBy[i].LostTarget();
+        }
+        beingTargetedBy.Clear();
+    }
+
+    public void AlertMatingPartners()
+    {
+        //Tell those who wanted this being that it is no longer avalible
+        for (int i = 0; i < beingTargetedBy.Count; i++)
+        {
+            if (beingTargetedBy[i].GetType().Equals(this.GetType()))
+            {
+                Debug.Log("Alerted mate");
+                beingTargetedBy[i].LostTarget();
+                beingTargetedBy.RemoveAt(i);
+                i--;
+            }
+        }
     }
 }

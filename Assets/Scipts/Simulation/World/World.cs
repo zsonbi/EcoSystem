@@ -1,23 +1,22 @@
 using UnityEngine;
 using System.Collections.Generic;
-using System;
-using System.Linq;
 
 /// <summary>
 /// The world where the simulation is going on
 /// </summary>
 public class World : MonoBehaviour
 {
+    [Header("Does animals have stats above their heads")]
+    public bool ShowStatBars = false;
+
     [Header("Animals to spawn")]
     public GameObject[] Animals;
 
     [Header("How many animals to spawn")]
     public int[] AnimalCount;
 
-    [Header("Does animals have stats above their heads")]
-    public bool ShowStatBars = false;
-
     private WorldGenerator generatedWorld; //The world which was generated at the start
+    private Dictionary<System.Type, List<GameObject>> shadowRealm;
 
     /// <summary>
     /// 1 where the area is passable 0 where it is blocked
@@ -62,6 +61,7 @@ public class World : MonoBehaviour
     //Spawn the animals
     private void SpawnAnimals()
     {
+        shadowRealm = new Dictionary<System.Type, List<GameObject>>();
         for (int i = 0; i < Animals.Length; i++)
         {
             GameObject parentObj = new GameObject(Animals[i].name + "Parent");
@@ -81,7 +81,9 @@ public class World : MonoBehaviour
                     }
                 } while (true);
             }
+            shadowRealm.Add(Animals[i].GetComponent<Animal>().GetType(), new List<GameObject>());
         }
+        int a = 1;
     }
 
     //------------------------------------------------------------------
@@ -92,7 +94,9 @@ public class World : MonoBehaviour
     public void Kill(LivingBeings beingToKill)
     {
         LivingBeingsLayer[beingToKill.XCoordOnGrid, beingToKill.YCoordOnGrid].Remove(beingToKill);
-        Destroy(beingToKill.gameObject);
+        Debug.Log(beingToKill.GetType().Name);
+        shadowRealm[beingToKill.GetType()].Add(beingToKill.gameObject);
+        beingToKill.gameObject.SetActive(false);
     }
 
     //-------------------------------------------------------------------
@@ -126,10 +130,12 @@ public class World : MonoBehaviour
     /// <param name="originalCoord">It's original position</param>
     /// <param name="newCoord">It's new position</param>
     /// <param name="animal">The animal to move</param>
-    public void Move(Coord originalCoord, Coord newCoord, Animal animal)
+    public void Move(Coord newCoord, Animal animal, ref int xPosInGrid, ref int yPosInGrid)
     {
-        this.LivingBeingsLayer[originalCoord.IntX, originalCoord.IntY].Remove(animal);
+        this.LivingBeingsLayer[xPosInGrid, yPosInGrid].Remove(animal);
         this.LivingBeingsLayer[newCoord.IntX, newCoord.IntY].Add(animal);
+        xPosInGrid = newCoord.IntX;
+        yPosInGrid = newCoord.IntY;
     }
 
     //---------------------------------------------------------------------
@@ -265,7 +271,7 @@ public class World : MonoBehaviour
             int yIndex = UnityEngine.Random.Range(yPos - visionRange, yPos + visionRange);
             if (generatedWorld.zSize > yIndex && yIndex >= 0 && generatedWorld.xSize > xIndex && xIndex >= 0 && moveLayer[xIndex, yIndex] == 1)
             {
-                return new Coord(xIndex * TileSize, yIndex * TileSize);
+                return new Coord(xIndex, yIndex);
             }
             if (counter >= 100)
             {
@@ -281,18 +287,24 @@ public class World : MonoBehaviour
     /// </summary>
     /// <param name="current">Current position</param>
     /// <param name="target">The target's position</param>
-    /// <returns></returns>
-    public Stack<Coord> CreatePath(Coord current, Coord target)
+    /// <param name="targetType">Reference to the targetType so it can change it to Explore if there was no path to the target</param>
+    /// <returns>The path</returns>
+    public Stack<Coord> CreatePath(Coord current, Coord target, ref TargetType targetType)
     {
         PathMaker pathMaker = new PathMaker(current, target, 20, this);
-
-        return pathMaker.CreatePath();
+        Stack<Coord> path;
+        //If making the path failed set the targetType to explore
+        if (!pathMaker.CreatePath(out path))
+        {
+            targetType = TargetType.Explore;
+        }
+        return path;
     }
 
     public Coord GetBestMoveTarget(Coord current, Coord target)
     {
         float leastDist = float.MaxValue;
-        Coord moveTarget = null;
+        Coord moveTarget = current;
         float tempDist;
         int currentXIndex = (int)Mathf.Round(current.x);
         int currentYIndex = (int)Mathf.Round(current.y);
@@ -334,7 +346,6 @@ public class World : MonoBehaviour
     {
         int xCoord = theOneAskingOut.XCoordOnGrid;
         int yCoord = theOneAskingOut.YCoordOnGrid;
-
         for (int i = xCoord - range; i < xCoord + range; i++)
         {
             if (i < 0 || i >= generatedWorld.xSize)
@@ -345,15 +356,23 @@ public class World : MonoBehaviour
                 if (j < 0 || j >= generatedWorld.zSize)
                     continue;
 
-                List<LivingBeings> sameSpecies = generatedWorld.livingLayer[i, j].FindAll(x => x.Specie == theOneAskingOut.Specie && ((Animal)x).Gender != theOneAskingOut.Gender);
+                theOneWhichAccepted = generatedWorld.livingLayer[i, j].Find(x => x.Specie == theOneAskingOut.Specie && ((Animal)x).Gender != theOneAskingOut.Gender && ((Animal)x).GetAskedOut(theOneAskingOut));
+                if (theOneWhichAccepted != null)
+                {
+                    Debug.Log("Accepted");
+                    return true;
+                }
+                /*List<LivingBeings> sameSpecies = generatedWorld.livingLayer[i, j].FindAll(x => x.Specie == theOneAskingOut.Specie && ((Animal)x).Gender != theOneAskingOut.Gender);
                 for (int listIndex = 0; listIndex < sameSpecies.Count; listIndex++)
                 {
-                    if (((Animal)sameSpecies[listIndex]).GetAskedOut())
+                    if (((Animal)sameSpecies[listIndex]).GetAskedOut(theOneAskingOut))
                     {
                         theOneWhichAccepted = sameSpecies[listIndex];
+                        Debug.Log("Accepted");
                         return true;
                     }
-                }
+                    Debug.Log("Got in");
+                }*/
             }
         }
 

@@ -89,4 +89,19 @@ public class Coord
     {
         return Mathf.Atan2(endOfTheVector.y - baseOfTheVector.y, endOfTheVector.x - baseOfTheVector.x);
     }
+
+    public override bool Equals(object obj)
+    {
+        return x == (obj as Coord).x && y == (obj as Coord).y;
+    }
+
+    public override string ToString()
+    {
+        return "x:" + x + " y:" + y;
+    }
+
+    public string ToStringWholeCoords()
+    {
+        return "x:" + IntX + " y:" + IntY;
+    }
 }

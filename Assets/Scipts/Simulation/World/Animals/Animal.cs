@@ -6,9 +6,9 @@ using UnityEngine;
 /// </summary>
 public abstract class Animal : LivingBeings
 {
-    protected static float maxHunger = 90f; //The time it takes for it to starve to death
-    protected static float maxThirst = 90f; //The time it takes for it to die of thirst
-    protected static float maxHorniness = 50f;
+    protected static float maxHunger = 45f; //The time it takes for it to starve to death
+    protected static float maxThirst = 45f; //The time it takes for it to die of thirst
+    protected static float maxHorniness = 60f;
 
     /// <summary>
     /// The food types the animal can eat
@@ -48,7 +48,7 @@ public abstract class Animal : LivingBeings
     /// <summary>
     /// The gender of the animal
     /// </summary>
-    public Gender Gender { get; protected set; }
+    public Gender Gender;// { get; protected set; }
 
     /// <summary>
     /// The next square where it wants to move
@@ -59,7 +59,7 @@ public abstract class Animal : LivingBeings
     protected float timeToMove; //The time it takes for it to move one square
     private float time = 0; //The time since last square
 
-    protected TargetType currentTarget; //Type of the current target
+    protected TargetType currentTarget = TargetType.NONE; //Type of the current target
     private Stack<Coord> path; //The path to the target
     protected LivingBeings targetBeing; //The being which is being targeted
     protected MoveState moveState;
@@ -83,6 +83,10 @@ public abstract class Animal : LivingBeings
     /// <returns>The target's type</returns>
     protected abstract TargetType DecideTargetPriority();
 
+    public abstract void Born();
+
+    public abstract void Born(Animal parent1, Animal parent2);
+
     //*****************************************************************************
     //Runs every frame
     private void Update()
@@ -90,7 +94,7 @@ public abstract class Animal : LivingBeings
         time += Time.deltaTime;
 
         //If we have a target move towards it
-        if (target != null)
+        if (currentTarget != TargetType.NONE)
         {
             MoveTowardsTarget();
         }
@@ -132,12 +136,16 @@ public abstract class Animal : LivingBeings
         switch (moveState)
         {
             case MoveState.Waiting:
-                if (moveTarget.Equals(new Coord(targetBeing.XPos, targetBeing.ZPos)))
+                //if (moveTarget.Equals(new Coord(targetBeing.XPos, targetBeing.ZPos)))
+                //{
+                //    Debug.Log("Completed waiting");
+                //    ReachedTarget();
+                //}
+                //  basePosition = new Coord(XCoordOnGrid, YCoordOnGrid);
+                if (moveTarget is null)
                 {
-                    ReachedTarget();
+                    moveTarget = basePosition;
                 }
-                basePosition = new Coord(XCoordOnGrid, YCoordOnGrid);
-                return;
                 break;
 
             case MoveState.Moving:
@@ -159,7 +167,8 @@ public abstract class Animal : LivingBeings
             case MoveState.Meeting:
                 if (target.Equals(new Coord(XPos, ZPos)))
                 {
-                    moveState = MoveState.Waiting;
+                    ReachedTarget();
+                    (targetBeing as Animal).ReachedByMeetingPartner(this);
                     return;
                 }
                 moveTarget = world.GetBestMoveTarget(new Coord(XPos, ZPos), new Coord(targetBeing.XPos, targetBeing.ZPos));
@@ -177,11 +186,20 @@ public abstract class Animal : LivingBeings
             default:
                 break;
         }
-        world.Move(basePosition, new Coord(XCoordOnGrid, YCoordOnGrid), this);
+        world.Move(new Coord(XCoordOnGrid, YCoordOnGrid), this, ref xPosInGrid, ref yPosInGrid);
         basePosition = new Coord(XPos, ZPos);
 
         float angle = Mathf.Rad2Deg * Coord.CalcAngle(basePosition, moveTarget);
         this.transform.eulerAngles = new Vector3(0, angle + (angle % 180 == 0 ? 90f : -90f), 0);
+    }
+
+    public void ReachedByMeetingPartner(Animal meetingPartner)
+    {
+        if (moveState == MoveState.Waiting)
+        {
+            ReachedTarget();
+            AlertMatingPartners();
+        }
     }
 
     private void GetNewTarget()
@@ -193,21 +211,31 @@ public abstract class Animal : LivingBeings
         {
             case MoveState.Moving:
                 target = world.CreateNewTarget(ref currentTarget, this, ref targetBeing);
-                path = world.CreatePath(new Coord(XPos, ZPos), target);
+                path = world.CreatePath(new Coord(XPos, ZPos), target, ref currentTarget);
                 break;
 
             case MoveState.Fleeing:
                 break;
 
             case MoveState.Meeting:
+                Horniness = 0f;
                 if (world.AskOutNearbyAnimals(this, RoundedVisionRange, ref targetBeing))
                 {
                     target = ((Animal)targetBeing).moveTarget;
-                    path = world.CreatePath(new Coord(XPos, ZPos), target);
+
+                    try
+                    {
+                        path = world.CreatePath(new Coord(XPos, ZPos), target, ref currentTarget);
+                    }
+                    catch (System.Exception)
+                    {
+                        Debug.Log("It was the meeting");
+                        throw;
+                    }
                 }
                 else
                 {
-                    Horniness = 0f;
+                    Debug.Log("Rejected");
                     GetNewTarget();
                     return;
                 }
@@ -226,15 +254,12 @@ public abstract class Animal : LivingBeings
         }
         else
         {
-            if (moveState != MoveState.Moving)
-            {
-                moveState = MoveState.Moving;
-            }
+            moveState = MoveState.Moving;
         }
-        GetNextMoveTarget();
-        time = 0;
-
         Debug.Log(currentTarget.ToString());
+        GetNextMoveTarget();
+
+        time = 0f;
     }
 
     //----------------------------------------------------------------------
@@ -246,7 +271,7 @@ public abstract class Animal : LivingBeings
     {
         if (Hunger > maxHunger * 0.6f && Thirst > maxThirst * 0.6f)
         {
-            if (Horniness >= maxHorniness)
+            if (true && Horniness >= maxHorniness)
             {
                 Debug.Log("HORNY");
                 return TargetType.Mate;
@@ -271,8 +296,9 @@ public abstract class Animal : LivingBeings
     public void LostTarget()
     {
         Debug.Log("Lost Target");
-        this.target = null;
-        GetNewTarget();
+        //  this.target = null;
+        currentTarget = TargetType.NONE;
+        // GetNewTarget();
     }
 
     //---------------------------------------------------------------------------------
@@ -321,21 +347,23 @@ public abstract class Animal : LivingBeings
     protected override void Die()
     {
         if (targetBeing != null)
-        {
             targetBeing.NoLongerBeingTargetedBy(this);
-        }
         base.Die();
     }
 
-    public bool GetAskedOut()
+    public bool GetAskedOut(Animal theOneAskingOut)
     {
         if (TargetType.Explore == currentTarget)
         {
-            if (Horniness > 20f)
+            if (Horniness > maxHorniness * 0.5f)
             {
                 target = moveTarget;
                 moveState = MoveState.Waiting;
+                currentTarget = TargetType.Chicken;
+                targetBeing = theOneAskingOut;
                 Debug.Log("Got Asked out");
+                theOneAskingOut.BeingTargetedBy(this);
+                this.Horniness = 0f;
                 return true;
             }
         }

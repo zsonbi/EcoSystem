@@ -247,11 +247,11 @@ public class WorldGenerator : MonoBehaviour
         {
             return EnviromentType.Rock;
         }
-        else if (noise > 0.75f && tileLayer[x, z] == TileType.Grass)
+        else if (noise > 0.65f && tileLayer[x, z] == TileType.Grass)
         {
             return EnviromentType.Tree;
         }
-        else if (noise > 0.65f && tileLayer[x, z] == TileType.Grass)
+        else if (noise > 0.55f && tileLayer[x, z] == TileType.Grass)
         {
             return EnviromentType.Plant;
         }

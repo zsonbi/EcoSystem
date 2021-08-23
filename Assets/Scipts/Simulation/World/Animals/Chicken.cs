@@ -9,7 +9,7 @@ public class Chicken : Animal
     private static float maxVisionRange = 15f; //The maximum vision chickens can have
 
     //------------------------------------------------------
-    //Runs before first update
+    //Runs when the script is loaded
     private void Awake()
     {
         //Set the chickens stats
@@ -17,10 +17,7 @@ public class Chicken : Animal
         base.Specie = Species.Chicken;
         base.Hunger = maxHunger;
         base.Thirst = maxThirst;
-        base.Gender = (Random.Range(0, 1) == 1 ? Gender.Male : Gender.Female);
-        base.Speed = Random.Range(0.2f, maxSpeed);
-        base.VisionRange = Random.Range(4f, maxVisionRange);
-        base.timeToMove = 1f / Speed;
+        Born();
         SetInitialStatBarMaxValues(Hunger, Thirst, maxHorniness);
     }
 
@@ -66,7 +63,7 @@ public class Chicken : Animal
         switch (currentTarget)
         {
             case TargetType.Chicken:
-                if (targetBeing != null && !targetBeing.GotEaten)
+                if (targetBeing != null && !targetBeing.GotEaten && Gender.Female == Gender)
                 {
                     this.Reproduce(targetBeing);
                 }
@@ -84,7 +81,21 @@ public class Chicken : Animal
             default:
                 break;
         }
-        target = null;
+        //target = null;
+        currentTarget = TargetType.NONE;
+    }
+
+    public override void Born()
+    {
+        base.Gender = (Random.Range(0, 2) == 1 ? Gender.Male : Gender.Female);
+        base.Speed = Random.Range(0.2f, maxSpeed);
+        base.VisionRange = Random.Range(4f, maxVisionRange);
+        base.timeToMove = 1f / Speed;
+    }
+
+    public override void Born(Animal parent1, Animal parent2)
+    {
+        throw new System.NotImplementedException();
     }
 
     //------------------------------------------------------------

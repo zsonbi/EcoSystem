@@ -1,3 +1,3 @@
-public enum FoodType
+public enum FoodType : int
 {
 }

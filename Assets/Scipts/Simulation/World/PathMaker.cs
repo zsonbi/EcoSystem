@@ -64,6 +64,7 @@ public class PathMaker
         }
     }
 
+    private const byte maxDepth = 15;
     private Node[,] map; //The grid
     private World world; //Reference to the world
     private Stack<Coord> path; //Path which it will return
@@ -97,28 +98,37 @@ public class PathMaker
                     map[i, j] = new Node();
             }
         }
-
-        //Set the goal and the start
-        this.goal = map[(int)goal.x - startXCoord, (int)goal.y - startYCoord];
-        this.goal.passable = true; //If it is water make it passable (maybe someday I will make this better)
-        this.start = map[(int)start.x - startXCoord, (int)start.y - startYCoord];
+        try
+        {
+            //Set the goal and the start
+            this.goal = map[goal.IntX - startXCoord, goal.IntY - startYCoord];
+            this.goal.passable = true; //If it is water make it passable (maybe someday I will make this better)
+            this.start = map[start.IntX - startXCoord, start.IntY - startYCoord];
+        }
+        catch (System.Exception)
+        {
+            Debug.Log("The buggy coords were: " + goal.ToStringWholeCoords() + start.ToStringWholeCoords() + " startXCoord: " + startXCoord + " startYCoord: " + startYCoord);
+            throw;
+        }
     }
 
     //---------------------------------------------------------------------
     /// <summary>
     /// Creates a new path
     /// </summary>
-    /// <returns>The path</returns>
-    public Stack<Coord> CreatePath()
+    /// <param name="moveTargetStack">The stack which will store the coord toward the target</param>
+    /// <returns>False if there can't be a path made True if it was a success</returns>
+    public bool CreatePath(out Stack<Coord> moveTargetStack)
     {
         path = new Stack<Coord>();
         //Search for the goal
-        if (!SearchForGoal(start))
+        if (!SearchForGoal(start, 0))
         {
-            Debug.Log("No path found");
+            moveTargetStack = new Stack<Coord>();
+            return false;
         }
-
-        return path;
+        moveTargetStack = path;
+        return true;
     }
 
     //-------------------------------------------------------------
@@ -131,13 +141,18 @@ public class PathMaker
     //------------------------------------------------------------
     //Search for the node recursively
     //Returns true if it managed to find the goal, returns false if it didn't manage to find the goal
-    private bool SearchForGoal(Node current)
+    private bool SearchForGoal(Node current, byte depth)
     {
         current.Visit(); //Visit the node
         //Check if it is the goal
         if (current.Equals(goal))
         {
             return true;
+        }
+        //So it doesn't make a path which kills the animal in the process
+        if (depth >= maxDepth)
+        {
+            return false;
         }
 
         //Get the possible ways it can go
@@ -169,7 +184,7 @@ public class PathMaker
         //Order them by the distance and try them each
         foreach (var item in possibleWays.OrderBy(x => x.DistanceFromGoal))
         {
-            if (SearchForGoal(item))
+            if (SearchForGoal(item, (byte)(depth + 1)))
             {
                 path.Push(item.position);
                 return true;
