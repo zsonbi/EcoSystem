@@ -9,6 +9,7 @@ public abstract class Animal : LivingBeings
     protected static float maxHunger = 45f; //The time it takes for it to starve to death
     protected static float maxThirst = 45f; //The time it takes for it to die of thirst
     protected static float maxHorniness = 60f;
+    protected static float mutationRate = 0.3f;
 
     /// <summary>
     /// The food types the animal can eat
@@ -72,12 +73,6 @@ public abstract class Animal : LivingBeings
     protected abstract void ReachedTarget();
 
     /// <summary>
-    ///  Reproduce (even chickens are better at it than me)
-    /// </summary>
-    /// <param name="otherOne">the other chicken</param>
-    public abstract void Reproduce(LivingBeings otherOne);
-
-    /// <summary>
     /// Determine what should it look for in the meantime
     /// </summary>
     /// <returns>The target's type</returns>
@@ -136,12 +131,13 @@ public abstract class Animal : LivingBeings
         switch (moveState)
         {
             case MoveState.Waiting:
-                //if (moveTarget.Equals(new Coord(targetBeing.XPos, targetBeing.ZPos)))
-                //{
-                //    Debug.Log("Completed waiting");
-                //    ReachedTarget();
-                //}
-                //  basePosition = new Coord(XCoordOnGrid, YCoordOnGrid);
+                if (Hunger < maxHunger * 0.3f || Thirst < maxThirst * 0.3f)
+                {
+                    AlertMatingPartners();
+                    LostTarget();
+                    return;
+                }
+
                 if (moveTarget is null)
                 {
                     moveTarget = basePosition;
@@ -186,6 +182,7 @@ public abstract class Animal : LivingBeings
             default:
                 break;
         }
+        //Move it in the LivingBeings grid
         world.Move(new Coord(XCoordOnGrid, YCoordOnGrid), this, ref xPosInGrid, ref yPosInGrid);
         basePosition = new Coord(XPos, ZPos);
 
@@ -193,6 +190,11 @@ public abstract class Animal : LivingBeings
         this.transform.eulerAngles = new Vector3(0, angle + (angle % 180 == 0 ? 90f : -90f), 0);
     }
 
+    //---------------------------------------------------------------
+    /// <summary>
+    /// Alerts it's partner that it reached him/her
+    /// </summary>
+    /// <param name="meetingPartner">The partner</param>
     public void ReachedByMeetingPartner(Animal meetingPartner)
     {
         if (moveState == MoveState.Waiting)
@@ -202,6 +204,10 @@ public abstract class Animal : LivingBeings
         }
     }
 
+    //--------------------------------------------------------------------------------
+    /// <summary>
+    /// Gets a new target according to the moveState and the currentTaget
+    /// </summary>
     private void GetNewTarget()
     {
         currentTarget = DecideTargetPriority();
@@ -296,9 +302,7 @@ public abstract class Animal : LivingBeings
     public void LostTarget()
     {
         Debug.Log("Lost Target");
-        //  this.target = null;
         currentTarget = TargetType.NONE;
-        // GetNewTarget();
     }
 
     //---------------------------------------------------------------------------------
@@ -351,6 +355,12 @@ public abstract class Animal : LivingBeings
         base.Die();
     }
 
+    //---------------------------------------------------------------------------------
+    /// <summary>
+    /// Gets asked out and if it accepts change the currentTarget to the asking out animal and the moveState to Waiting
+    /// </summary>
+    /// <param name="theOneAskingOut">The animal which asked it out</param>
+    /// <returns>true if accepted, false if rejected</returns>
     public bool GetAskedOut(Animal theOneAskingOut)
     {
         if (TargetType.Explore == currentTarget)
@@ -359,7 +369,7 @@ public abstract class Animal : LivingBeings
             {
                 target = moveTarget;
                 moveState = MoveState.Waiting;
-                currentTarget = TargetType.Chicken;
+                currentTarget = theOneAskingOut.currentTarget;
                 targetBeing = theOneAskingOut;
                 Debug.Log("Got Asked out");
                 theOneAskingOut.BeingTargetedBy(this);
@@ -370,16 +380,51 @@ public abstract class Animal : LivingBeings
         return false;
     }
 
+    //-----------------------------------------------------------------
+    /// <summary>
+    /// A simple distanceCheck to the target
+    /// </summary>
+    /// <returns></returns>
     protected bool CheckIfReachedTarget()
     {
         return Coord.CalcDistance(XPos, ZPos, targetBeing.XPos, targetBeing.ZPos) < 0.2f;
     }
 
+    //--------------------------------------------------------------------------
+    /// <summary>
+    /// Set the maxValues for the stat bars
+    /// </summary>
+    /// <param name="maxHunger">Maximum hunger</param>
+    /// <param name="maxThirst">Maximum thirst</param>
+    /// <param name="maxHorniness">Maximum horniness</param>
     protected void SetInitialStatBarMaxValues(float maxHunger, float maxThirst, float maxHorniness)
     {
         this.StatBarController.SetMaxHungerValue(maxHunger);
         this.StatBarController.SetMaxThirstValue(maxThirst);
         this.StatBarController.SetMaxHornyValue(maxHorniness);
+    }
+
+    //------------------------------------------------------------
+    /// <summary>
+    ///  Reproduce (even chickens are better at it than me)
+    /// </summary>
+    /// <param name="otherOne">the other chicken</param>
+    protected void Reproduce(LivingBeings otherOne)
+    {
+        world.SpawnNewAnimal(this, (Animal)otherOne);
+        Debug.Log("reproduce");
+    }
+
+    //--------------------------------------------------------------------
+    /// <summary>
+    /// Resets the animal's stats and reroll it's gender
+    /// </summary>
+    protected void ResetStats()
+    {
+        Hunger = maxHunger;
+        Thirst = maxThirst;
+        Horniness = 0f;
+        Gender = (Random.Range(0, 2) == 1 ? Gender.Male : Gender.Female);
     }
 
     //-------------------------------------------------------------------------------

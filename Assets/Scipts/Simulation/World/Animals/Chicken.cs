@@ -15,8 +15,7 @@ public class Chicken : Animal
         //Set the chickens stats
         base.FoodType.Add(Species.Plant);
         base.Specie = Species.Chicken;
-        base.Hunger = maxHunger;
-        base.Thirst = maxThirst;
+        ResetStats();
         Born();
         SetInitialStatBarMaxValues(Hunger, Thirst, maxHorniness);
     }
@@ -87,7 +86,6 @@ public class Chicken : Animal
 
     public override void Born()
     {
-        base.Gender = (Random.Range(0, 2) == 1 ? Gender.Male : Gender.Female);
         base.Speed = Random.Range(0.2f, maxSpeed);
         base.VisionRange = Random.Range(4f, maxVisionRange);
         base.timeToMove = 1f / Speed;
@@ -95,16 +93,13 @@ public class Chicken : Animal
 
     public override void Born(Animal parent1, Animal parent2)
     {
-        throw new System.NotImplementedException();
-    }
+        float minSpeed = (parent1.Speed + parent2.Speed) / 2 - mutationRate;
+        float maxSpeed = (parent1.Speed + parent2.Speed) / 2 + mutationRate;
+        float minVisionRange = (parent1.VisionRange + parent2.VisionRange) / 2 - mutationRate;
+        float maxVisionRange = (parent1.VisionRange + parent2.VisionRange) / 2 + mutationRate;
 
-    //------------------------------------------------------------
-    /// <summary>
-    ///  Reproduce (even chickens are better at it than me)
-    /// </summary>
-    /// <param name="otherOne">the other chicken</param>
-    public override void Reproduce(LivingBeings otherOne)
-    {
-        Debug.Log("reproduce");
+        Speed = Random.Range((minSpeed < 0.2f ? 0.2f : minSpeed), maxSpeed > Chicken.maxSpeed ? Chicken.maxSpeed : maxSpeed);
+        base.VisionRange = Random.Range(minVisionRange < 4f ? 4f : minVisionRange, maxVisionRange > Chicken.maxVisionRange ? Chicken.maxVisionRange : maxVisionRange);
+        base.timeToMove = 1f / Speed;
     }
 }

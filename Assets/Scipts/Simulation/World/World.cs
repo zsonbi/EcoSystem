@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine.UI;
 
 /// <summary>
 /// The world where the simulation is going on
@@ -16,7 +17,10 @@ public class World : MonoBehaviour
     public int[] AnimalCount;
 
     private WorldGenerator generatedWorld; //The world which was generated at the start
-    private Dictionary<System.Type, List<GameObject>> shadowRealm;
+    private Dictionary<System.Type, Stack<GameObject>> shadowRealm; //This is where the dead animals go (so they can be recycled)
+    private Dictionary<System.Type, GameObject> dictionaryToAnimals; //This is used when the shadowRealm is empty
+    private Dictionary<Species, List<LivingBeings>> livingBeingsCategorized;
+    private Dictionary<Species, Text> statusTextsToSpecies;
 
     /// <summary>
     /// 1 where the area is passable 0 where it is blocked
@@ -55,13 +59,25 @@ public class World : MonoBehaviour
         generatedWorld = this.GetComponent<WorldGenerator>();
 
         SpawnAnimals();
+        CreateStatusText();
     }
 
     //---------------------------------------------------------------
     //Spawn the animals
     private void SpawnAnimals()
     {
-        shadowRealm = new Dictionary<System.Type, List<GameObject>>();
+        shadowRealm = new Dictionary<System.Type, Stack<GameObject>>();
+        dictionaryToAnimals = new Dictionary<System.Type, GameObject>();
+        livingBeingsCategorized = new Dictionary<Species, List<LivingBeings>>();
+
+        //Create a categorized dictionary for the livingBeings
+        for (byte i = 0; i < System.Enum.GetNames(typeof(Species)).Length; i++)
+        {
+            livingBeingsCategorized.Add((Species.Plant + i), new List<LivingBeings>());
+        }
+        //Add the plants to the dictionary which was generated with the world
+        livingBeingsCategorized[Species.Plant] = generatedWorld.Plants;
+
         for (int i = 0; i < Animals.Length; i++)
         {
             GameObject parentObj = new GameObject(Animals[i].name + "Parent");
@@ -77,13 +93,41 @@ public class World : MonoBehaviour
                         GameObject animal = Instantiate(Animals[i], parentObj.transform);
                         animal.transform.position = new Vector3(xIndex, 0.7f, yIndex);
                         LivingBeings being = animal.GetComponent<LivingBeings>();
+                        livingBeingsCategorized[being.Specie].Add(being);
                         break;
                     }
                 } while (true);
             }
-            shadowRealm.Add(Animals[i].GetComponent<Animal>().GetType(), new List<GameObject>());
+            //This is where the dead ones will go
+            shadowRealm.Add(Animals[i].GetComponent<Animal>().GetType(), new Stack<GameObject>());
+            //So it is easier to access when spawning new animals
+            dictionaryToAnimals.Add(Animals[i].GetComponent<Animal>().GetType(), Animals[i]);
         }
-        int a = 1;
+    }
+
+    /// <summary>
+    /// Spawn a new animal
+    /// </summary>
+    /// <param name="parent1">One of the parents</param>
+    /// <param name="parent2">Other one of the parents</param>
+    public void SpawnNewAnimal(Animal parent1, Animal parent2)
+    {
+        System.Type animalType = parent1.GetType();
+        GameObject child;
+        if (shadowRealm[animalType].Count > 0)
+        {
+            child = shadowRealm[animalType].Pop();
+            child.gameObject.SetActive(true);
+        }
+        else
+        {
+            child = Instantiate(dictionaryToAnimals[animalType], parent1.transform.parent);
+        }
+        child.transform.position = new Vector3(parent1.XPos, parent1.YPos, parent1.ZPos);
+        Animal animal = child.GetComponent<Animal>();
+        animal.Born(parent1, parent2);
+        livingBeingsCategorized[animal.Specie].Add(animal);
+        Debug.Log("New animal was born");
     }
 
     //------------------------------------------------------------------
@@ -93,9 +137,10 @@ public class World : MonoBehaviour
     /// <param name="beingToKill">The being which is to be killed</param>
     public void Kill(LivingBeings beingToKill)
     {
+        livingBeingsCategorized[beingToKill.Specie].Remove(beingToKill);
         LivingBeingsLayer[beingToKill.XCoordOnGrid, beingToKill.YCoordOnGrid].Remove(beingToKill);
         Debug.Log(beingToKill.GetType().Name);
-        shadowRealm[beingToKill.GetType()].Add(beingToKill.gameObject);
+        shadowRealm[beingToKill.GetType()].Push(beingToKill.gameObject);
         beingToKill.gameObject.SetActive(false);
     }
 
@@ -108,6 +153,8 @@ public class World : MonoBehaviour
     /// <param name="livingBeing">The being to remove</param>
     public void RemoveFromLivingLayer(int xIndex, int yIndex, LivingBeings livingBeing)
     {
+        statusTextsToSpecies[livingBeing.Specie].text = livingBeing.Specie.ToString() + " count: " + livingBeingsCategorized[livingBeing.Specie].Count;
+        livingBeingsCategorized[livingBeing.Specie].Remove(livingBeing);
         this.LivingBeingsLayer[xIndex, yIndex].Remove(livingBeing);
     }
 
@@ -120,6 +167,8 @@ public class World : MonoBehaviour
     /// <param name="livingBeing">The being to add</param>
     public void AddToLivingLayer(int xIndex, int yIndex, LivingBeings livingBeing)
     {
+        statusTextsToSpecies[livingBeing.Specie].text = livingBeing.Specie.ToString() + " count: " + livingBeingsCategorized[livingBeing.Specie].Count;
+        livingBeingsCategorized[livingBeing.Specie].Add(livingBeing);
         this.LivingBeingsLayer[xIndex, yIndex].Add(livingBeing);
     }
 
@@ -301,6 +350,13 @@ public class World : MonoBehaviour
         return path;
     }
 
+    //-----------------------------------------------------------------------------------------
+    /// <summary>
+    /// Gets the nearest cell to the goal
+    /// </summary>
+    /// <param name="current">The current position</param>
+    /// <param name="target">The goal's position</param>
+    /// <returns>The next move target</returns>
     public Coord GetBestMoveTarget(Coord current, Coord target)
     {
         float leastDist = float.MaxValue;
@@ -308,12 +364,13 @@ public class World : MonoBehaviour
         float tempDist;
         int currentXIndex = (int)Mathf.Round(current.x);
         int currentYIndex = (int)Mathf.Round(current.y);
-
+        //Left
         if (currentXIndex - 1f >= 0 && moveLayer[currentXIndex - 1, currentYIndex] == 1)
         {
             leastDist = Coord.CalcDistance(target.x, target.y, currentXIndex - 1f, currentYIndex);
             moveTarget = new Coord(currentXIndex - 1f, currentYIndex);
         }
+        //Up
         if (currentYIndex - 1f >= 0 && moveLayer[currentXIndex, currentYIndex - 1] == 1)
         {
             tempDist = Coord.CalcDistance(target.x, target.y, currentXIndex, currentYIndex - 1.0f);
@@ -322,6 +379,7 @@ public class World : MonoBehaviour
                 moveTarget = new Coord(currentXIndex, currentYIndex - 1.0f);
             }
         }
+        //Right
         if (currentXIndex + 1 < generatedWorld.xSize && moveLayer[currentXIndex + 1, currentYIndex] == 1)
         {
             tempDist = Coord.CalcDistance(target.x, target.y, currentXIndex + 1.0f, currentYIndex);
@@ -330,6 +388,7 @@ public class World : MonoBehaviour
                 moveTarget = new Coord(currentXIndex + 1.0f, currentYIndex);
             }
         }
+        //Bottom
         if (currentYIndex + 1 < generatedWorld.zSize && moveLayer[currentXIndex, currentYIndex + 1] == 1)
         {
             tempDist = Coord.CalcDistance(target.x, target.y, currentXIndex, currentYIndex + 1.0f);
@@ -342,6 +401,14 @@ public class World : MonoBehaviour
         return moveTarget;
     }
 
+    //--------------------------------------------------------------------------------
+    /// <summary>
+    /// Asks out the nearby animals so it can reproduce
+    /// </summary>
+    /// <param name="theOneAskingOut">The animal which wants to reproduce</param>
+    /// <param name="range">The range of it's asking out</param>
+    /// <param name="theOneWhichAccepted">The animal which accepted it's advances</param>
+    /// <returns>true if he/she were successful, false if he/she failed</returns>
     public bool AskOutNearbyAnimals(Animal theOneAskingOut, byte range, ref LivingBeings theOneWhichAccepted)
     {
         int xCoord = theOneAskingOut.XCoordOnGrid;
@@ -355,30 +422,51 @@ public class World : MonoBehaviour
             {
                 if (j < 0 || j >= generatedWorld.zSize)
                     continue;
-
+                //Check if there is an animal which accepts it in the cell
                 theOneWhichAccepted = generatedWorld.livingLayer[i, j].Find(x => x.Specie == theOneAskingOut.Specie && ((Animal)x).Gender != theOneAskingOut.Gender && ((Animal)x).GetAskedOut(theOneAskingOut));
                 if (theOneWhichAccepted != null)
                 {
-                    Debug.Log("Accepted");
                     return true;
                 }
-                /*List<LivingBeings> sameSpecies = generatedWorld.livingLayer[i, j].FindAll(x => x.Specie == theOneAskingOut.Specie && ((Animal)x).Gender != theOneAskingOut.Gender);
-                for (int listIndex = 0; listIndex < sameSpecies.Count; listIndex++)
-                {
-                    if (((Animal)sameSpecies[listIndex]).GetAskedOut(theOneAskingOut))
-                    {
-                        theOneWhichAccepted = sameSpecies[listIndex];
-                        Debug.Log("Accepted");
-                        return true;
-                    }
-                    Debug.Log("Got in");
-                }*/
             }
         }
 
         return false;
     }
 
+    private void CreateStatusText()
+    {
+        statusTextsToSpecies = new Dictionary<Species, Text>();
+        GameObject parentObj = Camera.main.transform.GetChild(0).transform.GetChild(0).gameObject;
+
+        for (byte i = 0; i < System.Enum.GetNames(typeof(Species)).Length; i++)
+        {
+            GameObject textObj = new GameObject((Species.Plant + i).ToString() + "CountText");
+            textObj.transform.SetParent(parentObj.transform);
+
+            Text text = textObj.AddComponent<Text>();
+            RectTransform rectTransform = textObj.GetComponent<RectTransform>();
+            rectTransform.anchorMin = new Vector2(0, 1f);
+            rectTransform.anchorMax = new Vector2(0, 1f);
+
+            rectTransform.anchoredPosition = new Vector3(100, -50 + -20 * i, 0);
+            rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 200);
+            statusTextsToSpecies.Add((Species.Plant + i), textObj.GetComponent<Text>());
+            text.font = (Font)Resources.GetBuiltinResource(typeof(Font), "Arial.ttf");
+        }
+        UpdateStatusTexts();
+    }
+
+    private void UpdateStatusTexts()
+    {
+        for (byte i = 0; i < System.Enum.GetNames(typeof(Species)).Length; i++)
+        {
+            statusTextsToSpecies[(Species.Plant + i)].text = (Species.Plant + i).ToString() + " count: " + livingBeingsCategorized[(Species.Plant + i)].Count;
+        }
+    }
+
+    //-------------------------------------------------------------
+    //Debug Gizmos
     private void OnDrawGizmos()
     {
         Gizmos.color = new Color(0f, 1f, 0f);

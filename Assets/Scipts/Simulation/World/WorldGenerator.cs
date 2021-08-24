@@ -34,6 +34,9 @@ public class WorldGenerator : MonoBehaviour
     [HideInInspector]
     public List<byte[,]> layers = new List<byte[,]>(); //The layers used for navigation and other stuff
 
+    [HideInInspector]
+    public List<LivingBeings> Plants = new List<LivingBeings>();
+
     public TileType[,] tileLayer;
     public List<LivingBeings>[,] livingLayer;
 
@@ -179,6 +182,7 @@ public class WorldGenerator : MonoBehaviour
                         clone = Instantiate(Props[(byte)EnviromentType.Plant], this.transform);
                         //  objectsToCombine[(byte)EnviromentType.Plant + 3].Add(clone);
                         livingLayer[x, z].Add(clone.GetComponent<LivingBeings>());
+                        Plants.Add(clone.GetComponent<LivingBeings>());
                         clone.transform.position = new Vector3(x, 0.7f, z) * TileScale;
                         clone.transform.parent = plantParent.transform;
                         break;
@@ -247,11 +251,11 @@ public class WorldGenerator : MonoBehaviour
         {
             return EnviromentType.Rock;
         }
-        else if (noise > 0.65f && tileLayer[x, z] == TileType.Grass)
+        else if (noise > 0.75f && tileLayer[x, z] == TileType.Grass)
         {
             return EnviromentType.Tree;
         }
-        else if (noise > 0.55f && tileLayer[x, z] == TileType.Grass)
+        else if (noise > 0.60f && tileLayer[x, z] == TileType.Grass)
         {
             return EnviromentType.Plant;
         }
