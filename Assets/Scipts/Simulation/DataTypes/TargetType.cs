@@ -10,6 +10,7 @@ public enum TargetType : byte
     Chicken = 1,
     Bunny = 2,
     Fox = 3,
+    Penguin = 4,
 
     Mate,
     Food,

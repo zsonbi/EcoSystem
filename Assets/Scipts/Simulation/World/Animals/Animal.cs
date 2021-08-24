@@ -8,7 +8,7 @@ public abstract class Animal : LivingBeings
 {
     protected static float maxHunger = 45f; //The time it takes for it to starve to death
     protected static float maxThirst = 45f; //The time it takes for it to die of thirst
-    protected static float maxHorniness = 60f;
+    protected static float maxHorniness = 30f;
     protected static float mutationRate = 0.3f;
 
     /// <summary>
@@ -117,7 +117,6 @@ public abstract class Animal : LivingBeings
         //if the hunger or thirst reached 0 kill it
         if (Hunger <= 0 || Thirst <= 0)
         {
-            Debug.Log("Dead :(");
             Die();
         }
     }
@@ -228,20 +227,10 @@ public abstract class Animal : LivingBeings
                 if (world.AskOutNearbyAnimals(this, RoundedVisionRange, ref targetBeing))
                 {
                     target = ((Animal)targetBeing).moveTarget;
-
-                    try
-                    {
-                        path = world.CreatePath(new Coord(XPos, ZPos), target, ref currentTarget);
-                    }
-                    catch (System.Exception)
-                    {
-                        Debug.Log("It was the meeting");
-                        throw;
-                    }
+                    path = world.CreatePath(new Coord(XPos, ZPos), target, ref currentTarget);
                 }
                 else
                 {
-                    Debug.Log("Rejected");
                     GetNewTarget();
                     return;
                 }
@@ -262,7 +251,6 @@ public abstract class Animal : LivingBeings
         {
             moveState = MoveState.Moving;
         }
-        Debug.Log(currentTarget.ToString());
         GetNextMoveTarget();
 
         time = 0f;
@@ -279,7 +267,6 @@ public abstract class Animal : LivingBeings
         {
             if (true && Horniness >= maxHorniness)
             {
-                Debug.Log("HORNY");
                 return TargetType.Mate;
             }
             else
@@ -301,7 +288,6 @@ public abstract class Animal : LivingBeings
     /// </summary>
     public void LostTarget()
     {
-        Debug.Log("Lost Target");
         currentTarget = TargetType.NONE;
     }
 
@@ -371,7 +357,7 @@ public abstract class Animal : LivingBeings
                 moveState = MoveState.Waiting;
                 currentTarget = theOneAskingOut.currentTarget;
                 targetBeing = theOneAskingOut;
-                Debug.Log("Got Asked out");
+
                 theOneAskingOut.BeingTargetedBy(this);
                 this.Horniness = 0f;
                 return true;
@@ -412,7 +398,6 @@ public abstract class Animal : LivingBeings
     protected void Reproduce(LivingBeings otherOne)
     {
         world.SpawnNewAnimal(this, (Animal)otherOne);
-        Debug.Log("reproduce");
     }
 
     //--------------------------------------------------------------------

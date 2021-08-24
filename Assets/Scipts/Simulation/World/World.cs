@@ -127,7 +127,7 @@ public class World : MonoBehaviour
         Animal animal = child.GetComponent<Animal>();
         animal.Born(parent1, parent2);
         livingBeingsCategorized[animal.Specie].Add(animal);
-        Debug.Log("New animal was born");
+        Debug.Log("New" + parent1.Specie.ToString() + " was born");
     }
 
     //------------------------------------------------------------------
@@ -139,7 +139,6 @@ public class World : MonoBehaviour
     {
         livingBeingsCategorized[beingToKill.Specie].Remove(beingToKill);
         LivingBeingsLayer[beingToKill.XCoordOnGrid, beingToKill.YCoordOnGrid].Remove(beingToKill);
-        Debug.Log(beingToKill.GetType().Name);
         shadowRealm[beingToKill.GetType()].Push(beingToKill.gameObject);
         beingToKill.gameObject.SetActive(false);
     }

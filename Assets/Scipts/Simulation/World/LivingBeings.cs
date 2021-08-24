@@ -146,7 +146,6 @@ public abstract class LivingBeings : MonoBehaviour
         {
             if (beingTargetedBy[i].GetType().Equals(this.GetType()))
             {
-                Debug.Log("Alerted mate");
                 beingTargetedBy[i].LostTarget();
                 beingTargetedBy.RemoveAt(i);
                 i--;

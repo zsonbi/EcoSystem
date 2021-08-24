@@ -7,4 +7,5 @@ public enum Species : byte
     Chicken = 1,
     Bunny = 2,
     Fox = 3,
+    Penguin = 4
 }

@@ -98,18 +98,18 @@ public class PathMaker
                     map[i, j] = new Node();
             }
         }
-        try
-        {
-            //Set the goal and the start
-            this.goal = map[goal.IntX - startXCoord, goal.IntY - startYCoord];
-            this.goal.passable = true; //If it is water make it passable (maybe someday I will make this better)
-            this.start = map[start.IntX - startXCoord, start.IntY - startYCoord];
-        }
-        catch (System.Exception)
-        {
-            Debug.Log("The buggy coords were: " + goal.ToStringWholeCoords() + start.ToStringWholeCoords() + " startXCoord: " + startXCoord + " startYCoord: " + startYCoord);
-            throw;
-        }
+        //try
+        //{
+        //Set the goal and the start
+        this.goal = map[goal.IntX - startXCoord, goal.IntY - startYCoord];
+        this.goal.passable = true; //If it is water make it passable (maybe someday I will make this better)
+        this.start = map[start.IntX - startXCoord, start.IntY - startYCoord];
+        //}
+        //catch (System.Exception)
+        //{
+        //    Debug.Log("The buggy coords were: " + goal.ToStringWholeCoords() + start.ToStringWholeCoords() + " startXCoord: " + startXCoord + " startYCoord: " + startYCoord);
+        //    throw;
+        //}
     }
 
     //---------------------------------------------------------------------
