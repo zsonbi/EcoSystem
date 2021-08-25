@@ -274,12 +274,12 @@ public class WorldGenerator : MonoBehaviour
     /// <returns>the proper TileType</returns>
     private TileType DetermineTileType(int x, int z)
     {
-        float noise = Mathf.PerlinNoise((float)(x / (float)xSize * 5f) + XOffset, (float)(z / (float)zSize * 5f) + ZOffset) * 10f - 3.5f;
+        float noise = Mathf.PerlinNoise((float)(x / (float)xSize * 5f) + XOffset, (float)(z / (float)zSize * 5f) + ZOffset) * 10f - 3.8f;
         if (noise > 0.45f)
         {
             return TileType.Grass;
         }
-        else if (noise > 0f)
+        else if (noise > 0.1f)
         {
             return TileType.Sand;
         }

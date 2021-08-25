@@ -460,8 +460,8 @@ MonoBehaviour:
   - {fileID: 1157028143247034, guid: 5093148dca5cbc14e8ab8af73e0916ac, type: 3}
   - {fileID: 1290125285081394, guid: 2f63cac684bc3a54486992c06658102e, type: 3}
   TileScale: 1
-  zSize: 50
-  xSize: 50
+  zSize: 100
+  xSize: 100
   XOffset: 30
   ZOffset: 20
   RandomizeOffset: 1
@@ -482,7 +482,7 @@ MonoBehaviour:
   Animals:
   - {fileID: 1969419073538870, guid: fe009dc6fee97a64fa7dca512f038dcd, type: 3}
   - {fileID: 1755646104177140, guid: 3c2e9e5ea85c04a46afcf57edee09b98, type: 3}
-  AnimalCount: 6400000058020000
+  AnimalCount: 2c0100002c010000
 --- !u!4 &1896017913
 Transform:
   m_ObjectHideFlags: 0

@@ -86,16 +86,10 @@ public abstract class Animal : LivingBeings
     //Runs every frame
     private void Update()
     {
-        time += Time.deltaTime;
-        //If we have a target move towards it
-        if (currentTarget != TargetType.NONE)
-        {
-            MoveTowardsTarget();
-        }
-        else
-        {
-            GetNewTarget();
-        }
+        //else
+        //{
+        //    GetNewTarget();
+        //}
 
         //After a certain time get a new movetarget
         if (time >= timeToMove)
@@ -103,7 +97,11 @@ public abstract class Animal : LivingBeings
             time = 0;
             GetNextMoveTarget();
         }
-
+        //If we have a target move towards it
+        if (currentTarget != TargetType.NONE)
+        {
+            MoveTowardsTarget();
+        }
         //Update the stats
         Hunger -= Time.deltaTime;
         Thirst -= Time.deltaTime;
@@ -118,6 +116,7 @@ public abstract class Animal : LivingBeings
         {
             Die();
         }
+        time += Time.deltaTime;
     }
 
     //----------------------------------------------------------------
@@ -126,11 +125,14 @@ public abstract class Animal : LivingBeings
     /// </summary>
     private void GetNextMoveTarget()
     {
-        //if (currentTarget == TargetType.NONE)
-        //{
-        //    GetNewTarget();
-        //    return;
-        //}
+        if (currentTarget == TargetType.NONE)
+        {
+            GetNewTarget();
+            return;
+        }
+        //Move it in the LivingBeings grid
+        world.Move(new Coord(XCoordOnGrid, YCoordOnGrid), this, ref xPosInGrid, ref yPosInGrid);
+        basePosition = new Coord(XCoordOnGrid, YCoordOnGrid);
 
         switch (moveState)
         {
@@ -165,13 +167,13 @@ public abstract class Animal : LivingBeings
                 break;
 
             case MoveState.Meeting:
-                if (target.Equals(new Coord(XPos, ZPos)))
+                if (target.Equals(new Coord(xPosInGrid, yPosInGrid)))
                 {
                     ReachedTarget();
                     (targetBeing as Animal).ReachedByMeetingPartner(this);
                     return;
                 }
-                moveTarget = world.GetBestMoveTarget(new Coord(XPos, ZPos), new Coord(targetBeing.XPos, targetBeing.ZPos));
+                moveTarget = world.GetBestMoveTarget(new Coord(xPosInGrid, yPosInGrid), new Coord(targetBeing.XCoordOnGrid, targetBeing.YCoordOnGrid));
                 break;
 
             case MoveState.Hunting:
@@ -180,15 +182,12 @@ public abstract class Animal : LivingBeings
                     ReachedTarget();
                     return;
                 }
-                moveTarget = world.GetBestMoveTarget(new Coord(XPos, ZPos), new Coord(targetBeing.XPos, targetBeing.ZPos));
+                moveTarget = world.GetBestMoveTarget(new Coord(xPosInGrid, yPosInGrid), new Coord(targetBeing.XCoordOnGrid, targetBeing.YCoordOnGrid));
                 break;
 
             default:
                 break;
         }
-        //Move it in the LivingBeings grid
-        world.Move(new Coord(XCoordOnGrid, YCoordOnGrid), this, ref xPosInGrid, ref yPosInGrid);
-        basePosition = new Coord(XPos, ZPos);
 
         float angle = Mathf.Rad2Deg * Coord.CalcAngle(basePosition, moveTarget);
         this.transform.eulerAngles = new Vector3(0, angle + (angle % 180 == 0 ? 90f : -90f), 0);
@@ -212,7 +211,7 @@ public abstract class Animal : LivingBeings
     /// <summary>
     /// Gets a new target according to the moveState and the currentTaget
     /// </summary>
-    private void GetNewTarget()
+    protected void GetNewTarget()
     {
         currentTarget = DecideTargetPriority();
         targetBeing = null;
@@ -221,7 +220,7 @@ public abstract class Animal : LivingBeings
         {
             case MoveState.Moving:
                 target = world.CreateNewTarget(ref currentTarget, this, ref targetBeing);
-                path = world.CreatePath(new Coord(XPos, ZPos), target, ref currentTarget);
+                path = world.CreatePath(new Coord(xPosInGrid, yPosInGrid), target, ref currentTarget);
                 break;
 
             case MoveState.Fleeing:
@@ -232,7 +231,7 @@ public abstract class Animal : LivingBeings
                 if (world.AskOutNearbyAnimals(this, RoundedVisionRange, ref targetBeing))
                 {
                     target = ((Animal)targetBeing).moveTarget;
-                    path = world.CreatePath(new Coord(XPos, ZPos), target, ref currentTarget);
+                    path = world.CreatePath(new Coord(xPosInGrid, yPosInGrid), target, ref currentTarget);
                 }
                 else
                 {
@@ -411,10 +410,14 @@ public abstract class Animal : LivingBeings
     /// </summary>
     protected void ResetStats()
     {
+        xPosInGrid = (int)XPos;
+        yPosInGrid = (int)ZPos;
         Hunger = maxHunger;
         Thirst = maxThirst;
         Horniness = 0f;
         Gender = (Random.Range(0, 2) == 1 ? Gender.Male : Gender.Female);
+        currentTarget = TargetType.NONE;
+        time = float.MaxValue;
     }
 
     //-------------------------------------------------------------------------------

@@ -77,8 +77,8 @@ public class Penguin : Animal
             default:
                 break;
         }
-        //target = null;
         currentTarget = TargetType.NONE;
+        //   GetNewTarget();
     }
 
     public override void Born()
@@ -90,6 +90,7 @@ public class Penguin : Animal
 
     public override void Born(Animal parent1, Animal parent2)
     {
+        ResetStats();
         float minSpeed = (parent1.Speed + parent2.Speed) / 2 - mutationRate;
         float maxSpeed = (parent1.Speed + parent2.Speed) / 2 + mutationRate;
         float minVisionRange = (parent1.VisionRange + parent2.VisionRange) / 2 - mutationRate;

@@ -128,7 +128,6 @@ public class World : MonoBehaviour
         animal.Born(parent1, parent2);
         livingBeingsCategorized[animal.Specie].Add(animal);
         statusTextsToSpecies[animal.Specie].text = animal.Specie.ToString() + " count: " + livingBeingsCategorized[animal.Specie].Count;
-        Debug.Log("New" + parent1.Specie.ToString() + " was born");
     }
 
     //------------------------------------------------------------------

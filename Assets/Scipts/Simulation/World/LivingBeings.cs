@@ -47,12 +47,12 @@ public abstract class LivingBeings : MonoBehaviour
     /// <summary>
     /// Get the x coord if it is needed for the grid
     /// </summary>
-    public int XCoordOnGrid { get => (int)(Mathf.Round(XPos) / world.TileSize); }
+    public int XCoordOnGrid { get => (int)(Mathf.Round(XPos)); }
 
     /// <summary>
     /// Get the y coord if it is needed for the grid
     /// </summary>
-    public int YCoordOnGrid { get => (int)(Mathf.Round(ZPos) / world.TileSize); }
+    public int YCoordOnGrid { get => (int)(Mathf.Round(ZPos)); }
 
     /// <summary>
     /// The specie of the being
