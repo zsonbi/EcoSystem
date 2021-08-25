@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class Penguin : Animal
@@ -11,7 +9,7 @@ public class Penguin : Animal
     //Runs when the script is loaded
     private void Awake()
     {
-        //Set the chickens stats
+        //Set the Penguin stats
         base.FoodType.Add(Species.Plant);
         base.Specie = Species.Penguin;
         ResetStats();

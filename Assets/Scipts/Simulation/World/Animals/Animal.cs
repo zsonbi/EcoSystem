@@ -8,7 +8,7 @@ public abstract class Animal : LivingBeings
 {
     protected static float maxHunger = 45f; //The time it takes for it to starve to death
     protected static float maxThirst = 45f; //The time it takes for it to die of thirst
-    protected static float maxHorniness = 30f;
+    protected static float maxHorniness = 40f;
     protected static float mutationRate = 0.3f;
 
     /// <summary>
@@ -87,7 +87,6 @@ public abstract class Animal : LivingBeings
     private void Update()
     {
         time += Time.deltaTime;
-
         //If we have a target move towards it
         if (currentTarget != TargetType.NONE)
         {
@@ -127,6 +126,12 @@ public abstract class Animal : LivingBeings
     /// </summary>
     private void GetNextMoveTarget()
     {
+        //if (currentTarget == TargetType.NONE)
+        //{
+        //    GetNewTarget();
+        //    return;
+        //}
+
         switch (moveState)
         {
             case MoveState.Waiting:

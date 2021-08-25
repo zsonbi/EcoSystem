@@ -127,6 +127,7 @@ public class World : MonoBehaviour
         Animal animal = child.GetComponent<Animal>();
         animal.Born(parent1, parent2);
         livingBeingsCategorized[animal.Specie].Add(animal);
+        statusTextsToSpecies[animal.Specie].text = animal.Specie.ToString() + " count: " + livingBeingsCategorized[animal.Specie].Count;
         Debug.Log("New" + parent1.Specie.ToString() + " was born");
     }
 
@@ -186,7 +187,7 @@ public class World : MonoBehaviour
         yPosInGrid = newCoord.IntY;
     }
 
-    //---------------------------------------------------------------------
+    //------------------------------------------------------------------------------------------------------------
     /// <summary>
     /// Creates a new target
     /// </summary>
@@ -213,7 +214,7 @@ public class World : MonoBehaviour
         }
     }
 
-    //---------------------------------------------------------------------
+    //------------------------------------------------------------------------------------------
     //Gets the closest tile to the animal
     private Coord GetClosestTile(Animal seekingAnimal, TileType tileType, ref TargetType targetType)
     {
@@ -258,7 +259,7 @@ public class World : MonoBehaviour
         }
     }
 
-    //--------------------------------------------------------------------
+    //--------------------------------------------------------------------------------------------
     //Gets the closest livingBeing to the animal
     private Coord GetClosestLivingBeing(Animal seekingAnimal, ref LivingBeings targetBeing, ref TargetType targetType)
     {
@@ -305,7 +306,7 @@ public class World : MonoBehaviour
         }
     }
 
-    //---------------------------------------------------------------------
+    //--------------------------------------------------------------------------------------------
     //Just explore the map get a random coordinate in viewDistance and set it as the target
     private Coord Explore(Animal seekingAnimal)
     {

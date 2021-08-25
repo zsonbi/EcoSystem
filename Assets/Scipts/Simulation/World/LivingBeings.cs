@@ -79,7 +79,7 @@ public abstract class LivingBeings : MonoBehaviour
 
     //----------------------------------------------------------------------------------
     /// <summary>
-    /// Eat the plant
+    /// Get eaten
     /// </summary>
     /// <returns>true if it was eaten successfully false if it is fails miserably</returns>
     public virtual bool GetEaten()
@@ -122,7 +122,6 @@ public abstract class LivingBeings : MonoBehaviour
     /// <param name="animal">the animal which it should remove from the list</param>
     public void NoLongerBeingTargetedBy(Animal animal)
     {
-        //   beingTargetedBy.RemoveAll(x => x == animal);
         beingTargetedBy.Remove(animal);
     }
 
