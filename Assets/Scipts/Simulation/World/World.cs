@@ -21,6 +21,7 @@ public class World : MonoBehaviour
     private Dictionary<System.Type, GameObject> dictionaryToAnimals; //This is used when the shadowRealm is empty
     private Dictionary<Species, List<LivingBeings>> livingBeingsCategorized;
     private Dictionary<Species, Text> statusTextsToSpecies;
+    private PathMaker pathMaker;
 
     /// <summary>
     /// 1 where the area is passable 0 where it is blocked
@@ -57,7 +58,7 @@ public class World : MonoBehaviour
     private void Start()
     {
         generatedWorld = this.GetComponent<WorldGenerator>();
-
+        pathMaker = new PathMaker(20, this);
         SpawnAnimals();
         CreateStatusText();
     }
@@ -339,10 +340,9 @@ public class World : MonoBehaviour
     /// <returns>The path</returns>
     public Stack<Coord> CreatePath(Coord current, Coord target, ref TargetType targetType)
     {
-        PathMaker pathMaker = new PathMaker(current, target, 20, this);
         Stack<Coord> path;
         //If making the path failed set the targetType to explore
-        if (!pathMaker.CreatePath(out path))
+        if (!pathMaker.CreatePath(out path, current, target))
         {
             targetType = TargetType.Explore;
         }

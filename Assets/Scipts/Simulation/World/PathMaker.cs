@@ -12,7 +12,7 @@ public class PathMaker
     /// </summary>
     private class Node
     {
-        public float DistanceFromGoal { get; set; } //Distance from the target
+        public float DistanceFromGoal { get; private set; } //Distance from the target
         public bool Visited; //Was it already visited before
         public bool passable; //Is it passable
         public Coord position; //It's position
@@ -26,22 +26,10 @@ public class PathMaker
         /// <param name="yPos">The y position in the world</param>
         /// <param name="passable">Is it passable</param>
         /// <param name="indices">It's position in the grid</param>
-        public Node(int xPos, int yPos, bool passable, byte[] indices)
+        public Node(byte[] indices)
         {
-            this.passable = passable;
-            this.position = new Coord(xPos, yPos);
-            this.Visited = false;
-            this.DistanceFromGoal = float.MaxValue;
             this.indices = indices;
-        }
-
-        //-------------------------------------------------------
-        /// <summary>
-        /// Creates an empty Cell
-        /// </summary>
-        public Node()
-        {
-            this.passable = false;
+            this.position = new Coord();
         }
 
         //-------------------------------------------------------
@@ -62,6 +50,20 @@ public class PathMaker
         {
             this.Visited = true;
         }
+
+        public void Reset(int xPos, int yPos, bool passable)
+        {
+            this.passable = passable;
+
+            this.position.SetCoord((float)xPos, (float)yPos);
+            this.Visited = false;
+            this.DistanceFromGoal = float.MaxValue;
+        }
+
+        public void Reset()
+        {
+            this.passable = false;
+        }
     }
 
     private const byte maxDepth = 15;
@@ -70,21 +72,35 @@ public class PathMaker
     private Stack<Coord> path; //Path which it will return
     private Node start; //Start of the path
     private Node goal; //The target
+    private byte size;
 
     /// <summary>
     /// Creates a new instance of the PathMaker
     /// </summary>
     /// <param name="start">The starting position</param>
     /// <param name="goal">The target's position</param>
-    /// <param name="Size">The size of the grid (x size = Size *2, y size = Size*2)</param>
+    /// <param name="size">The size of the grid (x size = Size *2, y size = Size*2)</param>
     /// <param name="world">The world it is in</param>
-    public PathMaker(Coord start, Coord goal, byte Size, World world)
+    public PathMaker(byte size, World world)
     {
         this.world = world;
-        int startXCoord = (int)Mathf.Round(start.x) - Size;
-        int startYCoord = (int)Mathf.Round(start.y) - Size;
+        this.size = size;
+        map = new Node[size * 2, size * 2];
+        //Fill in the grid
+        for (byte i = 0; i < map.GetLength(0); i++)
+        {
+            for (byte j = 0; j < map.GetLength(1); j++)
+            {
+                map[i, j] = new Node(new byte[] { i, j });
+            }
+        }
+    }
 
-        map = new Node[Size * 2, Size * 2];
+    private void MoveGrid(Coord start, Coord goal)
+    {
+        int startXCoord = (int)Mathf.Round(start.x) - size;
+        int startYCoord = (int)Mathf.Round(start.y) - size;
+
         //Fill in the grid
         for (byte i = 0; i < map.GetLength(0); i++)
         {
@@ -93,9 +109,9 @@ public class PathMaker
                 int xIndex = i + startXCoord;
                 int yIndex = j + startYCoord;
                 if (xIndex >= 0 && xIndex < world.XSize && yIndex >= 0 && yIndex < world.YSize)
-                    map[i, j] = new Node(xIndex, yIndex, world.moveLayer[xIndex, yIndex] == 1, new byte[] { i, j });
+                    map[i, j].Reset(xIndex, yIndex, world.moveLayer[xIndex, yIndex] == 1);
                 else
-                    map[i, j] = new Node();
+                    map[i, j].Reset();
             }
         }
         try
@@ -118,8 +134,10 @@ public class PathMaker
     /// </summary>
     /// <param name="moveTargetStack">The stack which will store the coord toward the target</param>
     /// <returns>False if there can't be a path made True if it was a success</returns>
-    public bool CreatePath(out Stack<Coord> moveTargetStack)
+    public bool CreatePath(out Stack<Coord> moveTargetStack, Coord startCoord, Coord goalCoord)
     {
+        MoveGrid(startCoord, goalCoord);
+
         path = new Stack<Coord>();
         //Search for the goal
         if (!SearchForGoal(start, 0))
@@ -144,7 +162,7 @@ public class PathMaker
     private bool SearchForGoal(Node current, byte depth)
     {
         current.Visit(); //Visit the node
-        //Check if it is the goal
+                         //Check if it is the goal
         if (current.Equals(goal))
         {
             return true;
@@ -186,7 +204,7 @@ public class PathMaker
         {
             if (SearchForGoal(item, (byte)(depth + 1)))
             {
-                path.Push(item.position);
+                path.Push(new Coord(item.position.x, item.position.y));
                 return true;
             }
         }

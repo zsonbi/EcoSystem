@@ -38,6 +38,18 @@ public class Coord
     {
     }
 
+    //----------------------------------------------------------------------
+    /// <summary>
+    /// Sets the coord x and y value
+    /// </summary>
+    /// <param name="x">The x value</param>
+    /// <param name="y">The y value</param>
+    public void SetCoord(float x, float y)
+    {
+        this.x = x;
+        this.y = y;
+    }
+
     //---------------------------------------------------------------
     /// <summary>
     /// Calculates the distance of two points
