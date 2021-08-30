@@ -9,9 +9,9 @@ public abstract class Animal : LivingBeings
     [Header("The maximum amount of children it can have it gets selected by random")]
     public byte MaxNumberOfChildren = 1;
 
-    protected static float maxHunger = 80f; //The time it takes for it to starve to death
-    protected static float maxThirst = 80f; //The time it takes for it to die of thirst
-    protected static float maxHorniness = 60f; //The amount of horniness required to have the confidence to ask out nearby animals
+    protected float maxHunger = 80f; //The time it takes for it to starve to death
+    protected float maxThirst = 80f; //The time it takes for it to die of thirst
+    protected float maxHorniness = 60f; //The amount of horniness required to have the confidence to ask out nearby animals
     protected static float mutationRate = 0.4f; //The amount the stats can mutate
 
     /// <summary>
@@ -58,10 +58,10 @@ public abstract class Animal : LivingBeings
     protected float timeToMove; //The time it takes for it to move one square
     private float time = 0; //The time since last square
 
-    protected TargetType currentTarget = TargetType.NONE; //Type of the current target
+    public TargetType currentTarget = TargetType.NONE; //Type of the current target
     private Stack<Coord> path; //The path to the target
     protected LivingBeings targetBeing; //The being which is being targeted
-    protected MoveState moveState; //How it should get the next moveTarget
+    public MoveState moveState; //How it should get the next moveTarget
 
     //**********************************************************************************
     //Abstract methods
@@ -277,11 +277,11 @@ public abstract class Animal : LivingBeings
     /// Gets what is the most important to it food water etc.
     /// </summary>
     /// <returns></returns>
-    protected TargetType GetMostImportantTargetType()
+    protected virtual TargetType GetMostImportantTargetType()
     {
         if (Hunger > maxHunger * 0.6f && Thirst > maxThirst * 0.6f)
         {
-            if (true && Horniness >= maxHorniness)
+            if (Horniness >= maxHorniness)
             {
                 return TargetType.Mate;
             }

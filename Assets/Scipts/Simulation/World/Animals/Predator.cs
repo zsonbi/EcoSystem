@@ -12,8 +12,12 @@ public class Predator : Animal
     //Runs when the script is loaded
     private void Awake()
     {
+        maxHunger = 150f;
+        maxThirst = 150f;
+        maxHorniness = 120f;
         ResetStats();
         Born();
+
         SetInitialStatBarMaxValues(Hunger, Thirst, maxHorniness);
     }
 
@@ -43,6 +47,33 @@ public class Predator : Animal
                 return TargetType.Explore;
         }
     }
+
+    /*   //----------------------------------------------------------------------
+       /// <summary>
+       /// Gets what is the most important to it food water etc.
+       /// </summary>
+       /// <returns></returns>
+       protected override TargetType GetMostImportantTargetType()
+       {
+           if (Hunger > maxHunger * 0.5f && Thirst > maxThirst * 0.5f)
+           {
+               if (Horniness >= maxHorniness)
+               {
+                   return TargetType.Mate;
+               }
+               else
+                   return TargetType.Explore;
+           }
+           else if (Hunger <= Thirst)
+           {
+               return TargetType.Food;
+           }
+           else
+           {
+               return TargetType.Water;
+           }
+       }
+    */
 
     //---------------------------------------------------------
     /// <summary>
