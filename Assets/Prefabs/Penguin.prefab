@@ -172,7 +172,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4936587561821370}
   - component: {fileID: 95485790526497962}
-  - component: {fileID: 7921180669108005773}
+  - component: {fileID: -58513012231693855}
   m_Layer: 0
   m_Name: Penguin
   m_TagString: Untagged
@@ -215,7 +215,7 @@ Animator:
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorControllerStateOnDisable: 0
---- !u!114 &7921180669108005773
+--- !u!114 &-58513012231693855
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -224,11 +224,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 1755646104177140}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 472cbde777253c64ca6f7364031d8039, type: 3}
+  m_Script: {fileID: 11500000, guid: 7729c74ae6b768c42ba04b3fca05671e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   StatBarController: {fileID: 5422643948746922469}
-  Gender: 0
+  Specie: 4
+  FoodChainTier: 1
+  MaxNumberOfChildren: 5
 --- !u!1 &1855729412434242
 GameObject:
   m_ObjectHideFlags: 0

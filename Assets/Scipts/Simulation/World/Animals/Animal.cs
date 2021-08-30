@@ -6,15 +6,13 @@ using UnityEngine;
 /// </summary>
 public abstract class Animal : LivingBeings
 {
-    protected static float maxHunger = 45f; //The time it takes for it to starve to death
-    protected static float maxThirst = 45f; //The time it takes for it to die of thirst
-    protected static float maxHorniness = 40f;
-    protected static float mutationRate = 0.3f;
+    [Header("The maximum amount of children it can have it gets selected by random")]
+    public byte MaxNumberOfChildren = 1;
 
-    /// <summary>
-    /// The food types the animal can eat
-    /// </summary>
-    public List<Species> FoodType { get; protected set; } = new List<Species>();
+    protected static float maxHunger = 80f; //The time it takes for it to starve to death
+    protected static float maxThirst = 80f; //The time it takes for it to die of thirst
+    protected static float maxHorniness = 60f; //The amount of horniness required to have the confidence to ask out nearby animals
+    protected static float mutationRate = 0.4f; //The amount the stats can mutate
 
     /// <summary>
     /// Current hunger level of the animal when it reaches 0 it dies
@@ -49,7 +47,7 @@ public abstract class Animal : LivingBeings
     /// <summary>
     /// The gender of the animal
     /// </summary>
-    public Gender Gender;// { get; protected set; }
+    public Gender Gender { get; protected set; }
 
     /// <summary>
     /// The next square where it wants to move
@@ -63,7 +61,7 @@ public abstract class Animal : LivingBeings
     protected TargetType currentTarget = TargetType.NONE; //Type of the current target
     private Stack<Coord> path; //The path to the target
     protected LivingBeings targetBeing; //The being which is being targeted
-    protected MoveState moveState;
+    protected MoveState moveState; //How it should get the next moveTarget
 
     //**********************************************************************************
     //Abstract methods
@@ -86,11 +84,6 @@ public abstract class Animal : LivingBeings
     //Runs every frame
     private void Update()
     {
-        //else
-        //{
-        //    GetNewTarget();
-        //}
-
         //After a certain time get a new movetarget
         if (time >= timeToMove)
         {
@@ -137,13 +130,14 @@ public abstract class Animal : LivingBeings
         switch (moveState)
         {
             case MoveState.Waiting:
+                //Cancel the waiting if the animal is about to die
                 if (Hunger < maxHunger * 0.3f || Thirst < maxThirst * 0.3f)
                 {
                     AlertMatingPartners();
                     LostTarget();
                     return;
                 }
-
+                //Making sure so it doesn't spam error :(
                 if (moveTarget is null)
                 {
                     moveTarget = basePosition;
@@ -163,17 +157,29 @@ public abstract class Animal : LivingBeings
                 break;
 
             case MoveState.Fleeing:
-                //TODO
+                //Get the furthest cell from the predator
+                moveTarget = world.GetFurthestMoveTarget(new Coord(xPosInGrid, yPosInGrid), new Coord(targetBeing.XPos, targetBeing.YPos));
                 break;
 
             case MoveState.Meeting:
+                /*
                 if (target.Equals(new Coord(xPosInGrid, yPosInGrid)))
                 {
                     ReachedTarget();
                     (targetBeing as Animal).ReachedByMeetingPartner(this);
                     return;
+                }*/
+                if (path.Count > 0)
+                {
+                    moveTarget = path.Pop();
                 }
-                moveTarget = world.GetBestMoveTarget(new Coord(xPosInGrid, yPosInGrid), new Coord(targetBeing.XCoordOnGrid, targetBeing.YCoordOnGrid));
+                else
+                {
+                    ReachedTarget();
+                    (targetBeing as Animal).ReachedByMeetingPartner(this);
+                    return;
+                }
+
                 break;
 
             case MoveState.Hunting:
@@ -182,7 +188,12 @@ public abstract class Animal : LivingBeings
                     ReachedTarget();
                     return;
                 }
-                moveTarget = world.GetBestMoveTarget(new Coord(xPosInGrid, yPosInGrid), new Coord(targetBeing.XCoordOnGrid, targetBeing.YCoordOnGrid));
+                else if (Coord.CalcDistance(new Coord(targetBeing.XPos, targetBeing.YPos), new Coord(XPos, YPos)) >= VisionRange)
+                {
+                    targetBeing.NoLongerBeingTargetedBy(this);
+                    Escape();
+                }
+                moveTarget = world.GetClosestMoveTarget(new Coord(xPosInGrid, yPosInGrid), new Coord(targetBeing.XCoordOnGrid, targetBeing.YCoordOnGrid));
                 break;
 
             default:
@@ -223,9 +234,6 @@ public abstract class Animal : LivingBeings
                 path = world.CreatePath(new Coord(xPosInGrid, yPosInGrid), target, ref currentTarget);
                 break;
 
-            case MoveState.Fleeing:
-                break;
-
             case MoveState.Meeting:
                 Horniness = 0f;
                 if (world.AskOutNearbyAnimals(this, RoundedVisionRange, ref targetBeing))
@@ -241,6 +249,10 @@ public abstract class Animal : LivingBeings
                 break;
 
             case MoveState.Hunting:
+                target = world.CreateNewTarget(ref currentTarget, this, ref targetBeing);
+                if (targetBeing != null)
+                    ((Animal)targetBeing).BeingHuntedDown(this);
+
                 break;
 
             default:
@@ -370,6 +382,33 @@ public abstract class Animal : LivingBeings
         return false;
     }
 
+    //------------------------------------------------------------------------------------
+    /// <summary>
+    /// Alerts the animal that it is being hunted down
+    /// </summary>
+    /// <param name="theOneHuntingItDown">The animal which is trying to hunt it down</param>
+    public void BeingHuntedDown(LivingBeings theOneHuntingItDown)
+    {
+        moveState = MoveState.Fleeing;
+        currentTarget = TargetType.Fleeing;
+        targetBeing = theOneHuntingItDown;
+        AlertMatingPartners();
+        if (targetBeing != null)
+        {
+            targetBeing.NoLongerBeingTargetedBy(this);
+        }
+    }
+
+    //-----------------------------------------------------------------------------------
+    /// <summary>
+    /// Called when it escaped from the predator
+    /// </summary>
+    public void Escape()
+    {
+        Debug.Log("Escaped");
+        LostTarget();
+    }
+
     //-----------------------------------------------------------------
     /// <summary>
     /// A simple distanceCheck to the target
@@ -401,7 +440,11 @@ public abstract class Animal : LivingBeings
     /// <param name="otherOne">the other chicken</param>
     protected void Reproduce(LivingBeings otherOne)
     {
-        world.SpawnNewAnimal(this, (Animal)otherOne);
+        byte childCount = (byte)Random.Range(1, MaxNumberOfChildren + 1);
+        for (int i = 0; i < childCount; i++)
+        {
+            world.SpawnNewAnimal(this, (Animal)otherOne);
+        }
     }
 
     //--------------------------------------------------------------------

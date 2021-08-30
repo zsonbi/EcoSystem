@@ -5,12 +5,14 @@ public enum TargetType : byte
 {
     Explore = 255,
     Water = 254,
-    NONE = 253,
-    Plant = 0,
-    Chicken = 1,
-    Bunny = 2,
-    Fox = 3,
-    Penguin = 4,
+    Fleeing = 253,
+    NONE = 252,
+
+    LowestTier = 0,
+    BottomTier = 1,
+    MiddleTier = 2,
+    TopTier = 3,
+    HighestTier = 4,
 
     Mate,
     Food,

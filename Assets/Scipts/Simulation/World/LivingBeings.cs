@@ -6,7 +6,14 @@ using System.Collections.Generic;
 /// </summary>
 public abstract class LivingBeings : MonoBehaviour
 {
+    /// <summary>
+    /// The x position in the world's grid
+    /// </summary>
     protected int xPosInGrid;
+
+    /// <summary>
+    /// The y postition in the world's grid
+    /// </summary>
     protected int yPosInGrid;
 
     /// <summary>
@@ -57,12 +64,18 @@ public abstract class LivingBeings : MonoBehaviour
     /// <summary>
     /// The specie of the being
     /// </summary>
-    public Species Specie { get; protected set; }
+    public Species Specie;//{ get; protected set; }
 
     /// <summary>
     /// Bool to store if it has been already eaten
     /// </summary>
     public bool GotEaten { get; protected set; }
+
+    /// <summary>
+    /// The level the being is on the food chain
+    /// </summary>
+    [Header("The level the being is on the food chain")]
+    public FoodChainTier FoodChainTier;
 
     //-------------------------------------------------------
     //Runs when the script is loaded
@@ -143,7 +156,7 @@ public abstract class LivingBeings : MonoBehaviour
         //Tell those who wanted this being that it is no longer avalible
         for (int i = 0; i < beingTargetedBy.Count; i++)
         {
-            if (beingTargetedBy[i].GetType().Equals(this.GetType()))
+            if (beingTargetedBy[i].Specie.Equals(this.Specie))
             {
                 beingTargetedBy[i].LostTarget();
                 beingTargetedBy.RemoveAt(i);

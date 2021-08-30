@@ -17,11 +17,11 @@ public class World : MonoBehaviour
     public int[] AnimalCount;
 
     private WorldGenerator generatedWorld; //The world which was generated at the start
-    private Dictionary<System.Type, Stack<GameObject>> shadowRealm; //This is where the dead animals go (so they can be recycled)
-    private Dictionary<System.Type, GameObject> dictionaryToAnimals; //This is used when the shadowRealm is empty
-    private Dictionary<Species, List<LivingBeings>> livingBeingsCategorized;
-    private Dictionary<Species, Text> statusTextsToSpecies;
-    private PathMaker pathMaker;
+    private Dictionary<Species, Stack<GameObject>> shadowRealm; //This is where the dead animals go (so they can be recycled)
+    private Dictionary<Species, GameObject> dictionaryToAnimals; //This is used when the shadowRealm is empty
+    private Dictionary<Species, List<LivingBeings>> livingBeingsCategorized; //Categorize the living beings by species
+    private Dictionary<Species, Text> statusTextsToSpecies; //The status text connected to the species
+    private PathMaker pathMaker; //The pathmaker obj
 
     /// <summary>
     /// 1 where the area is passable 0 where it is blocked
@@ -67,20 +67,27 @@ public class World : MonoBehaviour
     //Spawn the animals
     private void SpawnAnimals()
     {
-        shadowRealm = new Dictionary<System.Type, Stack<GameObject>>();
-        dictionaryToAnimals = new Dictionary<System.Type, GameObject>();
+        shadowRealm = new Dictionary<Species, Stack<GameObject>>();
+        dictionaryToAnimals = new Dictionary<Species, GameObject>();
         livingBeingsCategorized = new Dictionary<Species, List<LivingBeings>>();
 
         //Create a categorized dictionary for the livingBeings
         for (byte i = 0; i < System.Enum.GetNames(typeof(Species)).Length; i++)
         {
             livingBeingsCategorized.Add((Species.Plant + i), new List<LivingBeings>());
+
+            //This is where the dead ones will go
+            shadowRealm.Add((Species.Plant + i), new Stack<GameObject>());
         }
+
         //Add the plants to the dictionary which was generated with the world
         livingBeingsCategorized[Species.Plant] = generatedWorld.Plants;
 
         for (int i = 0; i < Animals.Length; i++)
         {
+            //So it is easier to access when spawning new animals
+            dictionaryToAnimals.Add(Animals[i].GetComponent<Animal>().Specie, Animals[i]);
+
             GameObject parentObj = new GameObject(Animals[i].name + "Parent");
             parentObj.transform.parent = this.transform;
             for (int j = 0; j < AnimalCount[i]; j++)
@@ -99,10 +106,6 @@ public class World : MonoBehaviour
                     }
                 } while (true);
             }
-            //This is where the dead ones will go
-            shadowRealm.Add(Animals[i].GetComponent<Animal>().GetType(), new Stack<GameObject>());
-            //So it is easier to access when spawning new animals
-            dictionaryToAnimals.Add(Animals[i].GetComponent<Animal>().GetType(), Animals[i]);
         }
     }
 
@@ -113,16 +116,15 @@ public class World : MonoBehaviour
     /// <param name="parent2">Other one of the parents</param>
     public void SpawnNewAnimal(Animal parent1, Animal parent2)
     {
-        System.Type animalType = parent1.GetType();
         GameObject child;
-        if (shadowRealm[animalType].Count > 0)
+        if (shadowRealm[parent1.Specie].Count > 0)
         {
-            child = shadowRealm[animalType].Pop();
+            child = shadowRealm[parent1.Specie].Pop();
             child.gameObject.SetActive(true);
         }
         else
         {
-            child = Instantiate(dictionaryToAnimals[animalType], parent1.transform.parent);
+            child = Instantiate(dictionaryToAnimals[parent1.Specie], parent1.transform.parent);
         }
         child.transform.position = new Vector3(parent1.XPos, parent1.YPos, parent1.ZPos);
         Animal animal = child.GetComponent<Animal>();
@@ -140,7 +142,7 @@ public class World : MonoBehaviour
     {
         livingBeingsCategorized[beingToKill.Specie].Remove(beingToKill);
         LivingBeingsLayer[beingToKill.XCoordOnGrid, beingToKill.YCoordOnGrid].Remove(beingToKill);
-        shadowRealm[beingToKill.GetType()].Push(beingToKill.gameObject);
+        shadowRealm[beingToKill.Specie].Push(beingToKill.gameObject);
         beingToKill.gameObject.SetActive(false);
     }
 
@@ -263,11 +265,10 @@ public class World : MonoBehaviour
     //Gets the closest livingBeing to the animal
     private Coord GetClosestLivingBeing(Animal seekingAnimal, ref LivingBeings targetBeing, ref TargetType targetType)
     {
-        Species specie = (Species.Plant + (byte)targetType);
         byte visionRange = seekingAnimal.RoundedVisionRange;
         int xCoord = seekingAnimal.XCoordOnGrid;
         int yCoord = seekingAnimal.YCoordOnGrid;
-
+        TargetType localTarget = targetType;
         float nearest = float.MaxValue;
         Coord nearestCoord = new Coord();
 
@@ -281,7 +282,7 @@ public class World : MonoBehaviour
                 if (j < 0 || j >= generatedWorld.zSize)
                     continue;
 
-                if (generatedWorld.livingLayer[i, j].Find(x => x.Specie == specie) != null)
+                if (generatedWorld.livingLayer[i, j].Find(x => x.FoodChainTier == (FoodChainTier)localTarget) != null)
                 {
                     float dist = Coord.CalcDistance(i, j, seekingAnimal.XPos, seekingAnimal.ZPos);
                     if (dist < nearest)
@@ -296,7 +297,7 @@ public class World : MonoBehaviour
 
         if (nearest != float.MaxValue)
         {
-            targetBeing = generatedWorld.livingLayer[nearestCoord.IntX, nearestCoord.IntY].Find(x => x.Specie == specie);
+            targetBeing = generatedWorld.livingLayer[nearestCoord.IntX, nearestCoord.IntY].Find(x => x.FoodChainTier == (FoodChainTier)localTarget);
             return nearestCoord;
         }
         else
@@ -356,7 +357,7 @@ public class World : MonoBehaviour
     /// <param name="current">The current position</param>
     /// <param name="target">The goal's position</param>
     /// <returns>The next move target</returns>
-    public Coord GetBestMoveTarget(Coord current, Coord target)
+    public Coord GetClosestMoveTarget(Coord current, Coord target)
     {
         float leastDist = float.MaxValue;
         Coord moveTarget = current;
@@ -400,6 +401,57 @@ public class World : MonoBehaviour
         return moveTarget;
     }
 
+    //-----------------------------------------------------------------------------------------
+    /// <summary>
+    /// Gets the furthest cell to the goal
+    /// </summary>
+    /// <param name="current">The current position</param>
+    /// <param name="target">The goal's position</param>
+    /// <returns>The next move target</returns>
+    public Coord GetFurthestMoveTarget(Coord current, Coord target)
+    {
+        float leastDist = float.MinValue;
+        Coord moveTarget = current;
+        float tempDist;
+        int currentXIndex = (int)Mathf.Round(current.x);
+        int currentYIndex = (int)Mathf.Round(current.y);
+        //Left
+        if (currentXIndex - 1f >= 0 && moveLayer[currentXIndex - 1, currentYIndex] == 1)
+        {
+            leastDist = Coord.CalcDistance(target.x, target.y, currentXIndex - 1f, currentYIndex);
+            moveTarget = new Coord(currentXIndex - 1f, currentYIndex);
+        }
+        //Up
+        if (currentYIndex - 1f >= 0 && moveLayer[currentXIndex, currentYIndex - 1] == 1)
+        {
+            tempDist = Coord.CalcDistance(target.x, target.y, currentXIndex, currentYIndex - 1.0f);
+            if (tempDist > leastDist)
+            {
+                moveTarget = new Coord(currentXIndex, currentYIndex - 1.0f);
+            }
+        }
+        //Right
+        if (currentXIndex + 1 < generatedWorld.xSize && moveLayer[currentXIndex + 1, currentYIndex] == 1)
+        {
+            tempDist = Coord.CalcDistance(target.x, target.y, currentXIndex + 1.0f, currentYIndex);
+            if (tempDist > leastDist)
+            {
+                moveTarget = new Coord(currentXIndex + 1.0f, currentYIndex);
+            }
+        }
+        //Bottom
+        if (currentYIndex + 1 < generatedWorld.zSize && moveLayer[currentXIndex, currentYIndex + 1] == 1)
+        {
+            tempDist = Coord.CalcDistance(target.x, target.y, currentXIndex, currentYIndex + 1.0f);
+            if (tempDist > leastDist)
+            {
+                moveTarget = new Coord(currentXIndex, currentYIndex + 1.0f);
+            }
+        }
+
+        return moveTarget;
+    }
+
     //--------------------------------------------------------------------------------
     /// <summary>
     /// Asks out the nearby animals so it can reproduce
@@ -433,6 +485,10 @@ public class World : MonoBehaviour
         return false;
     }
 
+    //--------------------------------------------------------------------
+    /// <summary>
+    /// Creates the status texts which will display the number of living beings
+    /// </summary>
     private void CreateStatusText()
     {
         statusTextsToSpecies = new Dictionary<Species, Text>();
@@ -456,6 +512,10 @@ public class World : MonoBehaviour
         UpdateStatusTexts();
     }
 
+    //-------------------------------------------------------------------------
+    /// <summary>
+    /// Updates all of the status texts
+    /// </summary>
     private void UpdateStatusTexts()
     {
         for (byte i = 0; i < System.Enum.GetNames(typeof(Species)).Length; i++)
