@@ -110,7 +110,7 @@ Transform:
   m_GameObject: {fileID: 7395166878686290392}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
+  m_LocalScale: {x: 0.35, y: 0.35, z: 0.35}
   m_Children:
   - {fileID: 7583453875721383518}
   - {fileID: 4627741717130273730}
@@ -133,6 +133,8 @@ MonoBehaviour:
   Specie: 3
   FoodChainTier: 2
   MaxNumberOfChildren: 4
+  currentTarget: 252
+  moveState: 0
 --- !u!1001 &2507044125182834064
 PrefabInstance:
   m_ObjectHideFlags: 0

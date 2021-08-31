@@ -508,6 +508,7 @@ public class World : MonoBehaviour
             rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 200);
             statusTextsToSpecies.Add((Species.Plant + i), textObj.GetComponent<Text>());
             text.font = (Font)Resources.GetBuiltinResource(typeof(Font), "Arial.ttf");
+            text.color = Color.black;
         }
         UpdateStatusTexts();
     }
