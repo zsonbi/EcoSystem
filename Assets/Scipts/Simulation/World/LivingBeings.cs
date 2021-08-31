@@ -197,7 +197,7 @@ public abstract class LivingBeings : MonoBehaviour
     {
         if (Animator != null)
         {
-            Animator.Play("Base Layer.New State", -1, 0);
+            //Budget solution
             Animator.enabled = state;
         }
     }
