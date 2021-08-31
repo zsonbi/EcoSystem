@@ -4,15 +4,26 @@ using UnityEngine;
 
 public class MenuScript : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
+    [Header("The world where the animals are")]
+    public World World;
+
+    private bool hidden = true;
+
+    public void SettingButtonClicked()
     {
-        
+        this.gameObject.SetActive(hidden);
+        hidden = !hidden;
     }
 
-    // Update is called once per frame
-    void Update()
+    public void ChangeAnimators(bool value)
     {
-        
+        World.Animation = value;
+        World.UpdateAnimators();
+    }
+
+    public void ChangeStatusBars(bool value)
+    {
+        World.ShowStatBars = value;
+        World.UpdateStatBars();
     }
 }

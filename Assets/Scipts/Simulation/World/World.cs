@@ -16,6 +16,9 @@ public class World : MonoBehaviour
     [Header("How many animals to spawn")]
     public int[] AnimalCount;
 
+    [Header("Should the animals have animations")]
+    public bool Animation = true;
+
     private WorldGenerator generatedWorld; //The world which was generated at the start
     private Dictionary<Species, Stack<GameObject>> shadowRealm; //This is where the dead animals go (so they can be recycled)
     private Dictionary<Species, GameObject> dictionaryToAnimals; //This is used when the shadowRealm is empty
@@ -525,10 +528,45 @@ public class World : MonoBehaviour
         }
     }
 
+    //---------------------------------------------------------------------------
+    /// <summary>
+    /// Changes every beings animator's enabled state to the world's Animation property
+    /// </summary>
+    public void UpdateAnimators()
+    {
+        foreach (var item in livingBeingsCategorized)
+        {
+            for (int i = 0; i < item.Value.Count; i++)
+            {
+                item.Value[i].ChangeAnimatorState(Animation);
+            }
+        }
+    }
+
+    //----------------------------------------------------------------------------
+    /// <summary>
+    /// Changes every beings stat bar visibility to the world's ShowStatBars property
+    /// </summary>
+    public void UpdateStatBars()
+    {
+        foreach (var item in livingBeingsCategorized)
+        {
+            for (int i = 0; i < item.Value.Count; i++)
+            {
+                item.Value[i].ChangeStatBarVisibility(ShowStatBars);
+            }
+        }
+    }
+
     //-------------------------------------------------------------
     //Debug Gizmos
     private void OnDrawGizmos()
     {
+        if (generatedWorld == null)
+        {
+            return;
+        }
+
         Gizmos.color = new Color(0f, 1f, 0f);
         for (int i = 0; i < XSize; i++)
         {

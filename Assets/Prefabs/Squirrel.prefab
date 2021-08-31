@@ -48,6 +48,7 @@ MonoBehaviour:
   StatBarController: {fileID: 1061878207533776414}
   Specie: 6
   FoodChainTier: 1
+  Animator: {fileID: 0}
   MaxNumberOfChildren: 4
   currentTarget: 252
   moveState: 0

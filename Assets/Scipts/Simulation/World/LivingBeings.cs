@@ -77,6 +77,9 @@ public abstract class LivingBeings : MonoBehaviour
     [Header("The level the being is on the food chain")]
     public FoodChainTier FoodChainTier;
 
+    [Header("The animator component")]
+    public Animator Animator;
+
     //-------------------------------------------------------
     //Runs when the script is loaded
     private void Start()
@@ -88,6 +91,8 @@ public abstract class LivingBeings : MonoBehaviour
         basePosition = new Coord(XPos, YPos);
         if (StatBarController != null)
             StatBarController.gameObject.SetActive(world.ShowStatBars);
+        if (Animator != null)
+        { Animator.enabled = world.Animation; }
     }
 
     //----------------------------------------------------------------------------------
@@ -138,6 +143,7 @@ public abstract class LivingBeings : MonoBehaviour
         beingTargetedBy.Remove(animal);
     }
 
+    //-------------------------------------------------------------------------
     /// <summary>
     /// Clear the list and notify the beings that it is no longer avalible
     /// </summary>
@@ -151,6 +157,10 @@ public abstract class LivingBeings : MonoBehaviour
         beingTargetedBy.Clear();
     }
 
+    //--------------------------------------------------------------------
+    /// <summary>
+    /// Alerts the mating partners if there were any
+    /// </summary>
     public void AlertMatingPartners()
     {
         //Tell those who wanted this being that it is no longer avalible
@@ -162,6 +172,33 @@ public abstract class LivingBeings : MonoBehaviour
                 beingTargetedBy.RemoveAt(i);
                 i--;
             }
+        }
+    }
+
+    //-------------------------------------------------------------------------
+    /// <summary>
+    /// Changes the visibility of the stat bars
+    /// </summary>
+    /// <param name="visibility">true - visible, false - hidden</param>
+    public void ChangeStatBarVisibility(bool visibility)
+    {
+        if (StatBarController != null)
+        {
+            StatBarController.gameObject.SetActive(visibility);
+        }
+    }
+
+    //--------------------------------------------------------------------------------
+    /// <summary>
+    /// Changes the animator state
+    /// </summary>
+    /// <param name="visibility">true - active, false - disabled</param>
+    public void ChangeAnimatorState(bool state)
+    {
+        if (Animator != null)
+        {
+            Animator.Play("Base Layer.New State", -1, 0);
+            Animator.enabled = state;
         }
     }
 }
