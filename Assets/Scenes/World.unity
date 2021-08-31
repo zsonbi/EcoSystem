@@ -503,7 +503,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1387198161}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 0}
+        m_TargetAssemblyTypeName: 
+        m_MethodName: 
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: 
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1387198161
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -607,7 +619,7 @@ MonoBehaviour:
   - {fileID: 697050250154332777, guid: 194c1c5edac962d49a61d4e63ae375d9, type: 3}
   - {fileID: 6140596663817987404, guid: 0c134054275e95841be61359e2bb8f5c, type: 3}
   - {fileID: 5692538639124890024, guid: e83df6cd4cd607647aecdbd7f1a03c86, type: 3}
-  AnimalCount: e8030000e8030000c8000000e803000032000000e8030000
+  AnimalCount: 640000006400000000000000640000000500000064000000
 --- !u!4 &1896017913
 Transform:
   m_ObjectHideFlags: 0
