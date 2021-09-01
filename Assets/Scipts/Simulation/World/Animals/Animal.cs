@@ -6,6 +6,8 @@ using UnityEngine;
 /// </summary>
 public abstract class Animal : LivingBeings
 {
+    private int counter = 0;
+
     [Header("The maximum amount of children it can have it gets selected by random")]
     public byte MaxNumberOfChildren = 1;
 
@@ -225,6 +227,7 @@ public abstract class Animal : LivingBeings
     /// </summary>
     protected void GetNewTarget()
     {
+        counter++;
         currentTarget = DecideTargetPriority();
         targetBeing = null;
 
@@ -232,7 +235,7 @@ public abstract class Animal : LivingBeings
         {
             case MoveState.Moving:
                 target = world.CreateNewTarget(ref currentTarget, this, ref targetBeing);
-                path = world.CreatePath(new Coord(XCoordOnGrid, YCoordOnGrid), target, ref currentTarget);
+                path = world.CreatePath(new Coord(xPosInGrid, yPosInGrid), target, ref currentTarget);
                 break;
 
             case MoveState.Meeting:
@@ -253,6 +256,8 @@ public abstract class Animal : LivingBeings
                 target = world.CreateNewTarget(ref currentTarget, this, ref targetBeing);
                 if (targetBeing != null)
                     ((Animal)targetBeing).BeingHuntedDown(this);
+                else
+                    path = world.CreatePath(new Coord(xPosInGrid, yPosInGrid), target, ref currentTarget);
 
                 break;
 
@@ -406,7 +411,6 @@ public abstract class Animal : LivingBeings
     /// </summary>
     public void Escape()
     {
-        Debug.Log("Escaped");
         LostTarget();
     }
 
@@ -461,7 +465,8 @@ public abstract class Animal : LivingBeings
         Horniness = 0f;
         Gender = (Random.Range(0, 2) == 1 ? Gender.Male : Gender.Female);
         currentTarget = TargetType.NONE;
-        time = float.MaxValue;
+        moveTarget = null;
+        time = 99999f;
     }
 
     //-------------------------------------------------------------------------------
