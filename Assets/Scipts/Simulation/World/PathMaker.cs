@@ -124,7 +124,6 @@ public class PathMaker
         catch (System.Exception)
         {
             Debug.Log("The buggy coords were: " + goal.ToStringWholeCoords() + start.ToStringWholeCoords() + " startXCoord: " + startXCoord + " startYCoord: " + startYCoord);
-            throw;
         }
     }
 

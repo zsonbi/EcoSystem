@@ -131,6 +131,8 @@ public class World : MonoBehaviour
         }
         child.transform.position = new Vector3(parent1.XPos, parent1.YPos, parent1.ZPos);
         Animal animal = child.GetComponent<Animal>();
+        animal.ChangeAnimatorState(Animation);
+        animal.ChangeStatBarVisibility(ShowStatBars);
         animal.Born(parent1, parent2);
         livingBeingsCategorized[animal.Specie].Add(animal);
         statusTextsToSpecies[animal.Specie].text = animal.Specie.ToString() + " count: " + livingBeingsCategorized[animal.Specie].Count;

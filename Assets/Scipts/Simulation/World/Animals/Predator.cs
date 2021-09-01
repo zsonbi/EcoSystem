@@ -48,32 +48,31 @@ public class Predator : Animal
         }
     }
 
-    /*   //----------------------------------------------------------------------
-       /// <summary>
-       /// Gets what is the most important to it food water etc.
-       /// </summary>
-       /// <returns></returns>
-       protected override TargetType GetMostImportantTargetType()
-       {
-           if (Hunger > maxHunger * 0.5f && Thirst > maxThirst * 0.5f)
-           {
-               if (Horniness >= maxHorniness)
-               {
-                   return TargetType.Mate;
-               }
-               else
-                   return TargetType.Explore;
-           }
-           else if (Hunger <= Thirst)
-           {
-               return TargetType.Food;
-           }
-           else
-           {
-               return TargetType.Water;
-           }
-       }
-    */
+    //----------------------------------------------------------------------
+    /// <summary>
+    /// Gets what is the most important to it food water etc.
+    /// </summary>
+    /// <returns></returns>
+    protected override TargetType GetMostImportantTargetType()
+    {
+        if (Hunger > maxHunger * 0.5f && Thirst > maxThirst * 0.5f)
+        {
+            if (Horniness >= maxHorniness)
+            {
+                return TargetType.Mate;
+            }
+            else
+                return TargetType.Explore;
+        }
+        else if (Hunger <= Thirst)
+        {
+            return TargetType.Food;
+        }
+        else
+        {
+            return TargetType.Water;
+        }
+    }
 
     //---------------------------------------------------------
     /// <summary>

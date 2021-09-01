@@ -91,7 +91,7 @@ public abstract class Animal : LivingBeings
             GetNextMoveTarget();
         }
         //If we have a target move towards it
-        if (currentTarget != TargetType.NONE)
+        if (moveTarget != null)
         {
             MoveTowardsTarget();
         }
@@ -118,13 +118,14 @@ public abstract class Animal : LivingBeings
     /// </summary>
     private void GetNextMoveTarget()
     {
+        //Move it in the LivingBeings grid
+        world.Move(new Coord(XCoordOnGrid, YCoordOnGrid), this, ref xPosInGrid, ref yPosInGrid);
         if (currentTarget == TargetType.NONE)
         {
             GetNewTarget();
             return;
         }
-        //Move it in the LivingBeings grid
-        world.Move(new Coord(XCoordOnGrid, YCoordOnGrid), this, ref xPosInGrid, ref yPosInGrid);
+
         basePosition = new Coord(XCoordOnGrid, YCoordOnGrid);
 
         switch (moveState)
@@ -231,7 +232,7 @@ public abstract class Animal : LivingBeings
         {
             case MoveState.Moving:
                 target = world.CreateNewTarget(ref currentTarget, this, ref targetBeing);
-                path = world.CreatePath(new Coord(xPosInGrid, yPosInGrid), target, ref currentTarget);
+                path = world.CreatePath(new Coord(XCoordOnGrid, YCoordOnGrid), target, ref currentTarget);
                 break;
 
             case MoveState.Meeting:
@@ -416,7 +417,7 @@ public abstract class Animal : LivingBeings
     /// <returns></returns>
     protected bool CheckIfReachedTarget()
     {
-        return Coord.CalcDistance(XPos, ZPos, targetBeing.XPos, targetBeing.ZPos) < 0.2f;
+        return Coord.CalcDistance(XPos, ZPos, targetBeing.XPos, targetBeing.ZPos) < 0.9f;
     }
 
     //--------------------------------------------------------------------------
