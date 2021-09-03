@@ -32,6 +32,16 @@ public class PathMaker
             this.position = new Coord();
         }
 
+        public Node(byte[] indices, int xPos, int yPos, bool passable)
+        {
+            this.indices = indices;
+            this.passable = passable;
+
+            this.position = new Coord((float)xPos, (float)yPos);
+            this.Visited = false;
+            this.DistanceFromGoal = float.MaxValue;
+        }
+
         //-------------------------------------------------------
         /// <summary>
         /// Sets the distance
@@ -64,15 +74,22 @@ public class PathMaker
         {
             this.passable = false;
         }
+
+        public void Reset(bool passable)
+        {
+            this.passable = passable;
+            this.Visited = false;
+        }
     }
 
-    private const byte maxDepth = 15;
+    private const byte maxDepth = 24;
     private Node[,] map; //The grid
     private World world; //Reference to the world
     private Stack<Coord> path; //Path which it will return
     private Node start; //Start of the path
     private Node goal; //The target
-    private byte size;
+    private byte size; //The size of the allocated map
+    private Stack<Node> visitedNodes = new Stack<Node>();
 
     /// <summary>
     /// Creates a new instance of the PathMaker
@@ -85,17 +102,34 @@ public class PathMaker
     {
         this.world = world;
         this.size = size;
-        map = new Node[size * 2, size * 2];
+        map = new Node[world.XSize, world.YSize];
         //Fill in the grid
         for (byte i = 0; i < map.GetLength(0); i++)
         {
             for (byte j = 0; j < map.GetLength(1); j++)
             {
-                map[i, j] = new Node(new byte[] { i, j });
+                map[i, j] = new Node(new byte[] { i, j }, i, j, world.moveLayer[i, j] == 1);
             }
         }
     }
 
+    /// <summary>
+    /// Resets the goal and start back to what it should be and reverses the visited nodes state to not visited
+    /// </summary>
+    private void ResetBack()
+    {
+        while (visitedNodes.Count != 0)
+        {
+            visitedNodes.Pop().Visited = false;
+        }
+
+        start.Reset(world.moveLayer[start.indices[0], start.indices[1]] == 1);
+        goal.Reset(world.moveLayer[start.indices[0], start.indices[1]] == 1);
+    }
+
+    //-----------------------------------------------------------
+    //Moves the grid
+    //LEGACY CODE
     private void MoveGrid(Coord start, Coord goal)
     {
         int startXCoord = (int)Mathf.Round(start.x) - size;
@@ -135,7 +169,12 @@ public class PathMaker
     /// <returns>False if there can't be a path made True if it was a success</returns>
     public bool CreatePath(out Stack<Coord> moveTargetStack, Coord startCoord, Coord goalCoord)
     {
-        MoveGrid(startCoord, goalCoord);
+        // MoveGrid(startCoord, goalCoord);
+
+        //  Set the goal and the start
+        this.goal = map[goalCoord.IntX, goalCoord.IntY];
+        this.goal.passable = true; //If it is water make it passable (maybe someday I will make this better)
+        this.start = map[startCoord.IntX, startCoord.IntY];
 
         path = new Stack<Coord>();
         //Search for the goal
@@ -145,6 +184,7 @@ public class PathMaker
             return false;
         }
         moveTargetStack = path;
+        ResetBack();
         return true;
     }
 
@@ -161,7 +201,9 @@ public class PathMaker
     private bool SearchForGoal(Node current, byte depth)
     {
         current.Visit(); //Visit the node
-                         //Check if it is the goal
+        visitedNodes.Push(current);
+
+        //Check if it is the goal
         if (current.Equals(goal))
         {
             return true;
