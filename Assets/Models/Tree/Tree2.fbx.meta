@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: eee5b9668e9189f43ad3d3a1be01353d
+guid: d4da4b7d04e029e4699a8d593e23c96a
 ModelImporter:
   serializedVersion: 20200
   internalIDToNameTable: []
@@ -10,8 +10,8 @@ ModelImporter:
       name: palette.002
     second: {fileID: 2100000, guid: c7e294e05bde65747aa9d03b71fd2096, type: 2}
   materials:
-    materialImportMode: 2
-    materialName: 0
+    materialImportMode: 1
+    materialName: 2
     materialSearch: 1
     materialLocation: 1
   animations:
@@ -36,7 +36,7 @@ ModelImporter:
     extraExposedTransformPaths: []
     extraUserProperties: []
     clipAnimations: []
-    isReadable: 0
+    isReadable: 1
   meshes:
     lODScreenPercentages: []
     globalScale: 4

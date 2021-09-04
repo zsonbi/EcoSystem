@@ -69,8 +69,7 @@ MonoBehaviour:
   FoodChainTier: 2
   Animator: {fileID: 4326235343027824099}
   MaxNumberOfChildren: 3
-  currentTarget: 252
-  moveState: 0
+  MinEatable: 1
 --- !u!1001 &2507044125182834064
 PrefabInstance:
   m_ObjectHideFlags: 0

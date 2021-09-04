@@ -1348,7 +1348,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 4294967295
   m_IsActive: 1
 --- !u!114 &1896017910
 MonoBehaviour:
@@ -1397,7 +1397,7 @@ MonoBehaviour:
   - {fileID: 697050250154332777, guid: 194c1c5edac962d49a61d4e63ae375d9, type: 3}
   - {fileID: 6140596663817987404, guid: 0c134054275e95841be61359e2bb8f5c, type: 3}
   - {fileID: 5692538639124890024, guid: e83df6cd4cd607647aecdbd7f1a03c86, type: 3}
-  AnimalCount: 2c0100002c010000c80000002c010000280000002c010000
+  AnimalCount: 000000000000000088130000000000000000000000000000
   Animation: 0
 --- !u!4 &1896017913
 Transform:

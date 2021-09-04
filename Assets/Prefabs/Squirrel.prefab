@@ -49,7 +49,7 @@ MonoBehaviour:
   Specie: 6
   FoodChainTier: 1
   Animator: {fileID: 717724688283634391}
-  MaxNumberOfChildren: 4
+  MaxNumberOfChildren: 10
   MinEatable: 0
 --- !u!95 &717724688283634391
 Animator:
