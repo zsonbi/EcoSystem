@@ -68,7 +68,7 @@ MonoBehaviour:
   Specie: 3
   FoodChainTier: 2
   Animator: {fileID: 4326235343027824099}
-  MaxNumberOfChildren: 4
+  MaxNumberOfChildren: 3
   currentTarget: 252
   moveState: 0
 --- !u!1001 &2507044125182834064

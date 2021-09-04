@@ -113,6 +113,7 @@ public class PathMaker
         }
     }
 
+    //-------------------------------------------------------------
     /// <summary>
     /// Resets the goal and start back to what it should be and reverses the visited nodes state to not visited
     /// </summary>

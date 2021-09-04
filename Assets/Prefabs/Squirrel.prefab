@@ -50,8 +50,7 @@ MonoBehaviour:
   FoodChainTier: 1
   Animator: {fileID: 717724688283634391}
   MaxNumberOfChildren: 4
-  currentTarget: 252
-  moveState: 0
+  MinEatable: 0
 --- !u!95 &717724688283634391
 Animator:
   serializedVersion: 3

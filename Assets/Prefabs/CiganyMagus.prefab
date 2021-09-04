@@ -66,11 +66,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   StatBarController: {fileID: 5295014280631589750}
   Specie: 5
-  FoodChainTier: 3
+  FoodChainTier: 4
   Animator: {fileID: 6836231797880752826}
   MaxNumberOfChildren: 1
-  currentTarget: 252
-  moveState: 0
+  MinEatable: 1
 --- !u!1001 &1592578905464771029
 PrefabInstance:
   m_ObjectHideFlags: 0

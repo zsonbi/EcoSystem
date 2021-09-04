@@ -9,7 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 643721678974717790}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Fill Area
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -46,7 +46,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2129907110194093188}
   - component: {fileID: 6306145387077983149}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: HungerSlider
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -121,7 +121,7 @@ MonoBehaviour:
   m_MinValue: 0
   m_MaxValue: 45
   m_WholeNumbers: 0
-  m_Value: 44.96
+  m_Value: 45
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
@@ -135,7 +135,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5473870562447989710}
   - component: {fileID: 2507458642045591036}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: StatBars
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -183,7 +183,7 @@ GameObject:
   - component: {fileID: 2826314006670884836}
   - component: {fileID: 2618006088548899002}
   - component: {fileID: 4665207095029897678}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Background
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -258,7 +258,7 @@ GameObject:
   - component: {fileID: 6278984632284507768}
   - component: {fileID: 7727781447440390052}
   - component: {fileID: 2350003879834634710}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Fill
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -334,7 +334,7 @@ GameObject:
   - component: {fileID: 4161670041845954460}
   - component: {fileID: 8296169251369229277}
   - component: {fileID: 1753696736705332578}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Background
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -407,7 +407,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 478933498282002313}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Fill Area
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -444,7 +444,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5307972166368874311}
   - component: {fileID: 2403419905897699414}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: HornySlider
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -533,7 +533,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5519271398691110984}
   - component: {fileID: 1098464608992918824}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: ThirstSlider
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -623,7 +623,7 @@ GameObject:
   - component: {fileID: 3572005597421226574}
   - component: {fileID: 8940220664042094501}
   - component: {fileID: 4496280408804552461}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: TypeText
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -700,7 +700,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7580692508080389819}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Fill Area
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -738,7 +738,7 @@ GameObject:
   - component: {fileID: 4831218712729395594}
   - component: {fileID: 2804638406787076311}
   - component: {fileID: 7718910846898176156}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: TypeText
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -817,7 +817,7 @@ GameObject:
   - component: {fileID: 6645282902862349873}
   - component: {fileID: 6078149770881328819}
   - component: {fileID: 8930338400149576183}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Fill
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -893,7 +893,7 @@ GameObject:
   - component: {fileID: 8043503236629422049}
   - component: {fileID: 1206176216891617965}
   - component: {fileID: 2127963942082097385}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Fill
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -969,7 +969,7 @@ GameObject:
   - component: {fileID: 1466897988394977110}
   - component: {fileID: 1329757927953499912}
   - component: {fileID: 812491268458054793}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: TypeText
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1049,7 +1049,7 @@ GameObject:
   - component: {fileID: 8893305109037810776}
   - component: {fileID: 3639119133743832055}
   - component: {fileID: 2235198900928064882}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Canvas
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1150,7 +1150,7 @@ GameObject:
   - component: {fileID: 7822111840227966146}
   - component: {fileID: 6600344384526250017}
   - component: {fileID: 7181186088991153704}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Background
   m_TagString: Untagged
   m_Icon: {fileID: 0}

@@ -11,6 +11,9 @@ public abstract class Animal : LivingBeings
     [Header("The maximum amount of children it can have it gets selected by random")]
     public byte MaxNumberOfChildren = 1;
 
+    [Header("The food on the food chain it can still eat")]
+    public FoodChainTier MinEatable = FoodChainTier.LowestTier;
+
     protected float maxHunger = 80f; //The time it takes for it to starve to death
     protected float maxThirst = 80f; //The time it takes for it to die of thirst
     protected float maxHorniness = 60f; //The amount of horniness required to have the confidence to ask out nearby animals
@@ -60,10 +63,10 @@ public abstract class Animal : LivingBeings
     protected float timeToMove; //The time it takes for it to move one square
     private float time = 0; //The time since last square
 
-    public TargetType currentTarget = TargetType.NONE; //Type of the current target
+    protected TargetType currentTarget = TargetType.NONE; //Type of the current target
     private Stack<Coord> path; //The path to the target
     protected LivingBeings targetBeing; //The being which is being targeted
-    public MoveState moveState; //How it should get the next moveTarget
+    protected MoveState moveState; //How it should get the next moveTarget
 
     //**********************************************************************************
     //Abstract methods
@@ -338,7 +341,9 @@ public abstract class Animal : LivingBeings
         targetBeing.NoLongerBeingTargetedBy(this);
 
         if (targetBeing.GetEaten())
-            this.Hunger = maxHunger;
+        {
+            this.Hunger = maxHunger * ((float)(targetBeing.FoodChainTier + 1) / (float)this.FoodChainTier);
+        }
     }
 
     //---------------------------------------------------------------------------

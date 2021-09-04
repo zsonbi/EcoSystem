@@ -225,91 +225,108 @@ public class World : MonoBehaviour
     //Gets the closest tile to the animal
     private Coord GetClosestTile(Animal seekingAnimal, TileType tileType, ref TargetType targetType)
     {
-        byte visionRange = seekingAnimal.RoundedVisionRange;
-        int xCoord = seekingAnimal.XCoordOnGrid;
-        int yCoord = seekingAnimal.YCoordOnGrid;
-
-        float nearest = float.MaxValue;
-        Coord nearestCoord = new Coord();
-
-        for (int i = xCoord - visionRange; i < xCoord + visionRange; i++)
+        byte visionRange = seekingAnimal.RoundedVisionRange; //The size of the spiral
+        Direction dir = Direction.Left; //Direction the iteration is going
+        byte length = 0; //The length of the iteration
+        int row = seekingAnimal.XCoordOnGrid; //The row in the matrix
+        int col = seekingAnimal.YCoordOnGrid; //The col in the matrix
+        do
         {
-            if (i < 0 || i >= generatedWorld.xSize)
-                continue;
-
-            for (int j = yCoord - visionRange; j < yCoord + visionRange; j++)
+            //Increment the length by one every 2 cycle
+            if ((byte)dir % 2 == 0)
             {
-                if (j < 0 || j >= generatedWorld.zSize)
-                    continue;
-
-                if (generatedWorld.tileLayer[i, j] == tileType)
+                length++;
+            }
+            //Iterate through the side of the spiral
+            for (int i = 0; i < length; i++)
+            {
+                if ((byte)dir % 2 == 0)
                 {
-                    float dist = Coord.CalcDistance(i, j, seekingAnimal.XPos, seekingAnimal.ZPos);
-                    if (dist < nearest)
-                    {
-                        nearest = dist;
-                        nearestCoord.x = i;
-                        nearestCoord.y = j;
-                    }
+                    col += (byte)dir - 1;
+                }
+                else
+                {
+                    row -= (byte)dir - 2;
+                }
+                if (row >= XSize || row < 0 || col >= YSize || col < 0)
+                {
+                    continue;
+                }
+
+                if (generatedWorld.tileLayer[row, col] == tileType)
+                {
+                    return new Coord(row, col);
                 }
             }
-        }
+            //Change the direction
+            if (dir == Direction.Up)
+            {
+                dir = Direction.Left;
+            }
+            else
+            {
+                dir += 1;
+            }
+        } while (((float)length / 2f) <= visionRange);
 
-        if (nearest != float.MaxValue)
-        {
-            return nearestCoord;
-        }
-        else
-        {
-            targetType = TargetType.Explore;
-            return Explore(seekingAnimal);
-        }
+        //Change it to explore if it didn't find a target
+        targetType = TargetType.Explore;
+        return Explore(seekingAnimal);
     }
 
     //--------------------------------------------------------------------------------------------
     //Gets the closest livingBeing to the animal
     private Coord GetClosestLivingBeing(Animal seekingAnimal, ref LivingBeings targetBeing, ref TargetType targetType)
     {
-        byte visionRange = seekingAnimal.RoundedVisionRange;
-        int xCoord = seekingAnimal.XCoordOnGrid;
-        int yCoord = seekingAnimal.YCoordOnGrid;
-        TargetType localTarget = targetType;
-        float nearest = float.MaxValue;
-        Coord nearestCoord = new Coord();
-
-        for (int i = xCoord - visionRange; i < xCoord + visionRange; i++)
+        byte visionRange = seekingAnimal.RoundedVisionRange; //The size of the spiral
+        TargetType localTarget = targetType; //The current targettype
+        Direction dir = Direction.Left; //Direction the iteration is going
+        byte length = 0; //The length of the iteration
+        int row = seekingAnimal.XCoordOnGrid; //The row in the matrix
+        int col = seekingAnimal.YCoordOnGrid; //The col in the matrix
+        do
         {
-            if (i < 0 || i >= generatedWorld.xSize)
-                continue;
-
-            for (int j = yCoord - visionRange; j < yCoord + visionRange; j++)
+            //Increment the length by one every 2 cycle
+            if ((byte)dir % 2 == 0)
             {
-                if (j < 0 || j >= generatedWorld.zSize)
-                    continue;
-
-                if (generatedWorld.livingLayer[i, j].Find(x => x.FoodChainTier == (FoodChainTier)localTarget) != null)
+                length++;
+            }
+            //Iterate through the side of the spiral
+            for (int i = 0; i < length; i++)
+            {
+                if ((byte)dir % 2 == 0)
                 {
-                    float dist = Coord.CalcDistance(i, j, seekingAnimal.XPos, seekingAnimal.ZPos);
-                    if (dist < nearest)
-                    {
-                        nearest = dist;
-                        nearestCoord.x = i;
-                        nearestCoord.y = j;
-                    }
+                    col += (byte)dir - 1;
+                }
+                else
+                {
+                    row -= (byte)dir - 2;
+                }
+                if (row >= XSize || row < 0 || col >= YSize || col < 0)
+                {
+                    continue;
+                }
+                //Search for a living being which is in it's food chain tier
+                targetBeing = generatedWorld.livingLayer[row, col].Find(x => x.FoodChainTier <= (FoodChainTier)localTarget && x.FoodChainTier >= seekingAnimal.MinEatable);
+                if (targetBeing != null)
+                {
+                    return new Coord(row, col);
                 }
             }
-        }
+            //Change the direction
+            if (dir == Direction.Up)
+            {
+                dir = Direction.Left;
+            }
+            else
+            {
+                dir += 1;
+            }
+        } while (((float)length / 2f) <= visionRange);
 
-        if (nearest != float.MaxValue)
-        {
-            targetBeing = generatedWorld.livingLayer[nearestCoord.IntX, nearestCoord.IntY].Find(x => x.FoodChainTier == (FoodChainTier)localTarget);
-            return nearestCoord;
-        }
-        else
-        {
-            targetType = TargetType.Explore;
-            return Explore(seekingAnimal);
-        }
+        //Change it to explore if it didn't find a target
+        targetType = TargetType.Explore;
+        return Explore(seekingAnimal);
     }
 
     //--------------------------------------------------------------------------------------------
@@ -467,26 +484,50 @@ public class World : MonoBehaviour
     /// <returns>true if he/she were successful, false if he/she failed</returns>
     public bool AskOutNearbyAnimals(Animal theOneAskingOut, byte range, ref LivingBeings theOneWhichAccepted)
     {
-        int xCoord = theOneAskingOut.XCoordOnGrid;
-        int yCoord = theOneAskingOut.YCoordOnGrid;
-        for (int i = xCoord - range; i < xCoord + range; i++)
+        byte visionRange = theOneAskingOut.RoundedVisionRange; //The size of the spiral
+        Direction dir = Direction.Left; //Direction the iteration is going
+        byte length = 0; //The length of the iteration
+        int row = theOneAskingOut.XCoordOnGrid; //The row in the matrix
+        int col = theOneAskingOut.YCoordOnGrid; //The col in the matrix
+        do
         {
-            if (i < 0 || i >= generatedWorld.xSize)
-                continue;
-
-            for (int j = yCoord - range; j < yCoord + range; j++)
+            //Increment the length by one every 2 cycle
+            if ((byte)dir % 2 == 0)
             {
-                if (j < 0 || j >= generatedWorld.zSize)
+                length++;
+            }
+            //Iterate through the side of the spiral
+            for (int i = 0; i < length; i++)
+            {
+                if ((byte)dir % 2 == 0)
+                {
+                    col += (byte)dir - 1;
+                }
+                else
+                {
+                    row -= (byte)dir - 2;
+                }
+                if (row >= XSize || row < 0 || col >= YSize || col < 0)
+                {
                     continue;
+                }
                 //Check if there is an animal which accepts it in the cell
-                theOneWhichAccepted = generatedWorld.livingLayer[i, j].Find(x => x.Specie == theOneAskingOut.Specie && ((Animal)x).Gender != theOneAskingOut.Gender && ((Animal)x).GetAskedOut(theOneAskingOut));
+                theOneWhichAccepted = generatedWorld.livingLayer[row, col].Find(x => x.Specie == theOneAskingOut.Specie && ((Animal)x).Gender != theOneAskingOut.Gender && ((Animal)x).GetAskedOut(theOneAskingOut));
                 if (theOneWhichAccepted != null)
                 {
                     return true;
                 }
             }
-        }
-
+            //Change the direction
+            if (dir == Direction.Up)
+            {
+                dir = Direction.Left;
+            }
+            else
+            {
+                dir += 1;
+            }
+        } while (((float)length / 2f) <= visionRange);
         return false;
     }
 
