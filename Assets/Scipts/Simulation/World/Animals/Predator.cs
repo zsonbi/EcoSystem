@@ -1,7 +1,7 @@
 using UnityEngine;
 
 /// <summary>
-/// A chicken (scared of kfc)
+/// Preys on animals which are lower on the food chain
 /// </summary>
 public class Predator : Animal
 {
@@ -108,7 +108,6 @@ public class Predator : Animal
                 break;
         }
         currentTarget = TargetType.NONE;
-        //  GetNewTarget();
     }
 
     //----------------------------------------------------------------------------

@@ -78,7 +78,6 @@ public class Prey : Animal
                 break;
         }
         currentTarget = TargetType.NONE;
-        //  GetNewTarget();
     }
 
     //----------------------------------------------------------------------------

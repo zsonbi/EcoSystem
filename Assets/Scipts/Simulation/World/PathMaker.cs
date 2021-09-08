@@ -170,8 +170,6 @@ public class PathMaker
     /// <returns>False if there can't be a path made True if it was a success</returns>
     public bool CreatePath(out Stack<Coord> moveTargetStack, Coord startCoord, Coord goalCoord)
     {
-        // MoveGrid(startCoord, goalCoord);
-
         //  Set the goal and the start
         this.goal = map[goalCoord.IntX, goalCoord.IntY];
         this.goal.passable = true; //If it is water make it passable (maybe someday I will make this better)
@@ -181,7 +179,7 @@ public class PathMaker
         //Search for the goal
         if (!SearchForGoal(start, 0))
         {
-            moveTargetStack = new Stack<Coord>();
+            moveTargetStack = path;
             return false;
         }
         moveTargetStack = path;

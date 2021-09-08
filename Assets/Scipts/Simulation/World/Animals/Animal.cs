@@ -6,8 +6,6 @@ using UnityEngine;
 /// </summary>
 public abstract class Animal : LivingBeings
 {
-    private int counter = 0;
-
     [Header("The maximum amount of children it can have it gets selected by random")]
     public byte MaxNumberOfChildren = 1;
 
@@ -230,7 +228,6 @@ public abstract class Animal : LivingBeings
     /// </summary>
     protected void GetNewTarget()
     {
-        counter++;
         currentTarget = DecideTargetPriority();
         targetBeing = null;
 
