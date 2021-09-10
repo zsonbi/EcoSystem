@@ -148,6 +148,7 @@ public class World : MonoBehaviour
         livingBeingsCategorized[beingToKill.Specie].Remove(beingToKill);
         LivingBeingsLayer[beingToKill.XCoordOnGrid, beingToKill.YCoordOnGrid].Remove(beingToKill);
         shadowRealm[beingToKill.Specie].Push(beingToKill.gameObject);
+        statusTextsToSpecies[beingToKill.Specie].text = beingToKill.Specie.ToString() + " count: " + livingBeingsCategorized[beingToKill.Specie].Count;
         beingToKill.gameObject.SetActive(false);
     }
 

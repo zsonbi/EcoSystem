@@ -78,6 +78,8 @@ public class Prey : Animal
                 break;
         }
         currentTarget = TargetType.NONE;
+        //Set the time it needs to wait before getting it's next target
+        time = timeToMove - thinkingTime;
     }
 
     //----------------------------------------------------------------------------
