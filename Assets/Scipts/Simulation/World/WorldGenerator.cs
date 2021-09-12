@@ -15,12 +15,6 @@ public class WorldGenerator : MonoBehaviour
     [Header("Tile scale")]
     public int TileScale = 1;
 
-    [Header("Map z size")]
-    public int zSize = 100;
-
-    [Header("Map x size")]
-    public int xSize = 100;
-
     [Header("Offset of perlin noise on X axis")]
     public float XOffset = 0f;
 
@@ -36,6 +30,16 @@ public class WorldGenerator : MonoBehaviour
 
     [HideInInspector]
     public List<LivingBeings> Plants = new List<LivingBeings>();
+
+    /// <summary>
+    /// The size of the world on the z axis
+    /// </summary>
+    public int zSize { get; private set; }
+
+    /// <summary>
+    /// The size of the world on the x axis
+    /// </summary>
+    public int xSize { get; private set; }
 
     public TileType[,] tileLayer;
     public List<LivingBeings>[,] livingLayer;
@@ -68,6 +72,9 @@ public class WorldGenerator : MonoBehaviour
         //Cap the fps to 60
         Application.targetFrameRate = 60;
         QualitySettings.vSyncCount = 0;
+
+        //Load the values from the settings
+        LoadFromSettings();
 
         this.tileLayer = new TileType[xSize, zSize];
         this.livingLayer = new List<LivingBeings>[xSize, zSize];
@@ -113,6 +120,14 @@ public class WorldGenerator : MonoBehaviour
             if (objectsToCombine[i].Count != 0)
                 CombineMeshes(i);
         }
+    }
+
+    //------------------------------------------------------------------------
+    //Load the sizes from the settings
+    private void LoadFromSettings()
+    {
+        this.xSize = Settings.XSize;
+        this.zSize = Settings.YSize;
     }
 
     //---------------------------------------------------------------------------

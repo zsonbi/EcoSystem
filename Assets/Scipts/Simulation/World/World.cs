@@ -7,18 +7,19 @@ using UnityEngine.UI;
 /// </summary>
 public class World : MonoBehaviour
 {
-    [Header("Does animals have stats above their heads")]
-    public bool ShowStatBars = false;
-
-    [Header("Animals to spawn")]
-    public GameObject[] Animals;
-
-    [Header("How many animals to spawn")]
-    public int[] AnimalCount;
-
-    [Header("Should the animals have animations")]
+    [HideInInspector]
+    /// <summary>
+    /// Should the animals have animations
+    /// </summary>
     public bool Animation = true;
 
+    [HideInInspector]
+    /// <summary>
+    /// Does animals have stats above their heads
+    /// </summary>
+    public bool ShowStatBars = false;
+
+    private GameObject[] Animals; //The prefabs of the animals
     private WorldGenerator generatedWorld; //The world which was generated at the start
     private Dictionary<Species, Stack<GameObject>> shadowRealm; //This is where the dead animals go (so they can be recycled)
     private Dictionary<Species, GameObject> dictionaryToAnimals; //This is used when the shadowRealm is empty
@@ -60,10 +61,18 @@ public class World : MonoBehaviour
     //Runs before first Update
     private void Start()
     {
+        Animals = Resources.LoadAll<GameObject>("");
+        LoadFromSettings();
         generatedWorld = this.GetComponent<WorldGenerator>();
         pathMaker = new PathMaker(20, this);
         SpawnAnimals();
         CreateStatusText();
+    }
+
+    //-----------------------------------------------------------------
+    //Load the animal spawn rate from the settings
+    private void LoadFromSettings()
+    {
     }
 
     //---------------------------------------------------------------
@@ -88,12 +97,13 @@ public class World : MonoBehaviour
 
         for (int i = 0; i < Animals.Length; i++)
         {
+            Species currentSpecie = Animals[i].GetComponent<Animal>().Specie;
             //So it is easier to access when spawning new animals
-            dictionaryToAnimals.Add(Animals[i].GetComponent<Animal>().Specie, Animals[i]);
+            dictionaryToAnimals.Add(currentSpecie, Animals[i]);
 
             GameObject parentObj = new GameObject(Animals[i].name + "Parent");
             parentObj.transform.parent = this.transform;
-            for (int j = 0; j < AnimalCount[i]; j++)
+            for (int j = 0; j < Settings.NumberOfAnimalsToSpawn[currentSpecie]; j++)
             {
                 do
                 {

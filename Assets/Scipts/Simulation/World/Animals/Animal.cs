@@ -480,9 +480,12 @@ public abstract class Animal : LivingBeings
     {
         if (target == null)
             return;
-        Gizmos.color = new Color(0.3f, 0.3f, 0.3f);
-        Gizmos.DrawSphere(new Vector3(moveTarget.x, YPos, moveTarget.y), 0.1f);
+
         Gizmos.color = new Color(0, 0, 1);
         Gizmos.DrawSphere(new Vector3(target.x, YPos, target.y), 0.1f);
+        if (moveTarget == null)
+            return;
+        Gizmos.color = new Color(0.3f, 0.3f, 0.3f);
+        Gizmos.DrawSphere(new Vector3(moveTarget.x, YPos, moveTarget.y), 0.1f);
     }
 }
