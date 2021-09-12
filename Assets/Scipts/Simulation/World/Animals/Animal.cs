@@ -16,7 +16,7 @@ public abstract class Animal : LivingBeings
     protected float maxThirst = 80f; //The time it takes for it to die of thirst
     protected float maxHorniness = 60f; //The amount of horniness required to have the confidence to ask out nearby animals
     protected static float mutationRate = 0.4f; //The amount the stats can mutate
-    protected static float thinkingTime = 0.2f; //The number of seconds the animal should wait before getting a new target
+    protected static float thinkingTime = 0f; //The number of seconds the animal should wait before getting a new target
 
     /// <summary>
     /// Current hunger level of the animal when it reaches 0 it dies

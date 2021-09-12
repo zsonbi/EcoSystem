@@ -127,7 +127,7 @@ public class WorldGenerator : MonoBehaviour
     private void LoadFromSettings()
     {
         this.xSize = Settings.XSize;
-        this.zSize = Settings.YSize;
+        this.zSize = Settings.ZSize;
     }
 
     //---------------------------------------------------------------------------

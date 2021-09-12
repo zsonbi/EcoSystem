@@ -122,6 +122,7 @@ public class World : MonoBehaviour
         }
     }
 
+    //-------------------------------------------------------------------
     /// <summary>
     /// Spawn a new animal
     /// </summary>
