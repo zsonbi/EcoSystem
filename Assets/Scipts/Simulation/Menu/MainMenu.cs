@@ -43,6 +43,9 @@ public class MainMenu : MonoBehaviour
         if (Settings.NumberOfAnimalsToSpawn.Count == 0)
         {
             SetupDefaultAnimalSpawn();
+            //Cap the fps to 60
+            Application.targetFrameRate = 60;
+            QualitySettings.vSyncCount = 0;
         }
 
         //Update the input fields content to the default value
@@ -78,13 +81,15 @@ public class MainMenu : MonoBehaviour
             Destroy(currentlySelectedAnimal);
         }
 
-        currentlySelectedAnimal = Instantiate(Animals[currentIndex], this.transform);
+        currentlySelectedAnimal = Instantiate(Animals[currentIndex], Camera.main.transform);
         //So it doesn't start moving around
         currentlySelectedAnimal.GetComponent<Animal>().enabled = false;
         NumberOfAnimalsInput.text = Settings.NumberOfAnimalsToSpawn[currentlySelectedAnimal.GetComponent<Animal>().Specie].ToString();
-        currentlySelectedAnimal.transform.position = new Vector3(2.3f, -0.4f, -7f);
+        currentlySelectedAnimal.transform.position = new Vector3(5f, -3f, 20f);
         currentlySelectedAnimal.transform.eulerAngles = new Vector3(0, 200f, 0);
+        currentlySelectedAnimal.transform.localScale *= 5;
         SpecieLabel.text = currentlySelectedAnimal.GetComponent<Animal>().Specie.ToString();
+        currentlySelectedAnimal.GetComponent<Animal>().ChangeStatBarVisibility(false);
     }
 
     //------------------------------------------------------

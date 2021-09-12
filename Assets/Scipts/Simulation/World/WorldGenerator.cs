@@ -69,10 +69,6 @@ public class WorldGenerator : MonoBehaviour
     // Start is called before the first frame update
     private void Awake()
     {
-        //Cap the fps to 60
-        Application.targetFrameRate = 60;
-        QualitySettings.vSyncCount = 0;
-
         //Load the values from the settings
         LoadFromSettings();
 
